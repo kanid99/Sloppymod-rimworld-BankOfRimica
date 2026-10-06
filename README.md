@@ -40,8 +40,12 @@ If you miss the grace period, or press **Refuse to pay**:
 - The bars can't be sold. They count toward colony wealth, so raids get bigger.
 - While you hold them, extra raids come (default MTB of 6 days), plus at least one **Bank Heist** per quadrum.
 - **Bank Heist** is a new raid type at double strength (configurable).
-  - The raiders defend themselves at close range, but their goal is the silver. They bash through doors, grab what they can carry and sprint for the map edge.
-  - If they take heavy losses or a day passes, they call it off and flee.
+  - The raiders defend themselves at close range, but their goal is the silver. They bash through doors and grab what they can carry.
+  - **Getaways:** the first time a raider picks up silver, a **getaway shuttle** lands somewhere outside your home area. In a gauntlet heist, the robbers' crashed **junker ships** are the way out instead.
+  - Raiders carrying silver run for the nearest getaway craft and board it. If none can be reached, they run for the map edge.
+  - The craft lifts off an hour after the first raider boards, or as soon as no raiders are left on the ground. Once it's gone, so are the raiders and the silver aboard. Gauntlet ships take off again using their own flight art.
+  - **Destroy the craft before it takes off** and everyone aboard spills out of the wreck, still carrying the silver.
+  - If they take heavy losses or a day passes, they call off the heist and flee.
   - With VFE Pirates installed, a heist may crash in on **gauntlet ships** (15% chance), and is far more likely to (75%) once you hold **1,000,000+ silver** for the bank. The raiders switch back to the heist AI once they're out of the wrecks. You can change both chances, or turn gauntlet heists off, in the mod settings.
 - When the contract ends, the shuttle comes back, loads the bars and the crate, and leaves.
   - Each missing bar (stolen, lost or carried off) costs you **1.25× its value**.

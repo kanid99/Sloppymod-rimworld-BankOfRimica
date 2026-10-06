@@ -84,10 +84,12 @@ namespace BankOfRimica
                 Log.Message("[Bank of Rimica] Odyssey passenger shuttle art not found; using the bank's own shuttle art.");
                 return;
             }
-            foreach (ThingDef def in new[] { BoR_DefOf.BoR_BankShuttleIncoming, BoR_DefOf.BoR_BankShuttleLanded, BoR_DefOf.BoR_BankShuttleLeaving })
+            foreach (ThingDef def in new[] { BoR_DefOf.BoR_BankShuttleIncoming, BoR_DefOf.BoR_BankShuttleLanded, BoR_DefOf.BoR_BankShuttleLeaving,
+                                             BoR_DefOf.BoR_HeistShuttleIncoming, BoR_DefOf.BoR_HeistShuttleLanded, BoR_DefOf.BoR_GetawayLeaving })
             {
                 var data = new GraphicData();
                 data.CopyFrom(src.graphicData);
+                if (def.graphicData != null) data.color = def.graphicData.color; // keep the robbers' shuttle darkened
                 def.graphicData = data;
                 def.graphic = data.Graphic;
             }

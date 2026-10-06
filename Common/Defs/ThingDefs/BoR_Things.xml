@@ -212,4 +212,76 @@
     </building>
   </ThingDef>
 
+  <!-- Getaway shuttle the robbers call in once they have silver. Darkened copy of the bank shuttle art. -->
+  <ThingDef ParentName="SkyfallerBase">
+    <defName>BoR_HeistShuttleIncoming</defName>
+    <label>getaway shuttle (incoming)</label>
+    <thingClass>BankOfRimica.Skyfaller_HeistShuttle</thingClass>
+    <size>(3,3)</size>
+    <graphicData>
+      <texPath>Things/Building/BoR_BankShuttle</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(4,4)</drawSize>
+      <color>(110,110,120)</color>
+    </graphicData>
+    <skyfaller>
+      <movementType>Decelerate</movementType>
+      <shadow>Things/Skyfaller/SkyfallerShadowDropPod</shadow>
+      <shadowSize>(3,3)</shadowSize>
+      <anticipationSound>DropPod_Fall</anticipationSound>
+      <anticipationSoundTicks>100</anticipationSoundTicks>
+      <motesPerCell>1</motesPerCell>
+      <ticksToImpactRange>250~320</ticksToImpactRange>
+    </skyfaller>
+  </ThingDef>
+
+  <ThingDef ParentName="BuildingBase">
+    <defName>BoR_HeistShuttleLanded</defName>
+    <label>getaway shuttle</label>
+    <description>The bank robbers' getaway shuttle. Anyone who boards it with your silver is gone for good once it takes off. Destroy it first and everyone aboard spills out.</description>
+    <thingClass>BankOfRimica.Building_HeistShuttle</thingClass>
+    <graphicData>
+      <texPath>Things/Building/BoR_BankShuttle</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(4,4)</drawSize>
+      <color>(110,110,120)</color>
+    </graphicData>
+    <size>(3,3)</size>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>Impassable</passability>
+    <fillPercent>0.75</fillPercent>
+    <rotatable>false</rotatable>
+    <canOverlapZones>true</canOverlapZones>
+    <statBases>
+      <MaxHitPoints>450</MaxHitPoints>
+      <Flammability>0.4</Flammability>
+    </statBases>
+    <building>
+      <claimable>false</claimable>
+    </building>
+  </ThingDef>
+
+  <!-- Any getaway craft lifting off; its art is set per craft (gauntlet ships use their flight art). -->
+  <ThingDef ParentName="SkyfallerBase">
+    <defName>BoR_GetawayLeaving</defName>
+    <label>getaway craft (leaving)</label>
+    <thingClass>BankOfRimica.Skyfaller_GetawayLeaving</thingClass>
+    <size>(3,3)</size>
+    <graphicData>
+      <texPath>Things/Building/BoR_BankShuttle</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(4,4)</drawSize>
+      <color>(110,110,120)</color>
+    </graphicData>
+    <skyfaller>
+      <movementType>Decelerate</movementType>
+      <reversed>true</reversed>
+      <shadow>Things/Skyfaller/SkyfallerShadowDropPod</shadow>
+      <shadowSize>(3,3)</shadowSize>
+      <anticipationSound>DropPod_Leaving</anticipationSound>
+      <anticipationSoundTicks>-10</anticipationSoundTicks>
+      <ticksToImpactRange>-40~-15</ticksToImpactRange>
+    </skyfaller>
+  </ThingDef>
+
 </Defs>

@@ -8,12 +8,27 @@
     <casualInterruptible>false</casualInterruptible>
   </JobDef>
 
-  <!-- Bank heist raiders: defend themselves up close, otherwise grab bullion and run; fall back to a normal assault once it's gone. -->
+  <JobDef>
+    <defName>BoR_StealBullion</defName>
+    <driverClass>BankOfRimica.JobDriver_StealBullion</driverClass>
+    <reportString>stealing TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>BoR_BoardGetaway</defName>
+    <driverClass>BankOfRimica.JobDriver_BoardGetaway</driverClass>
+    <reportString>escaping on TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
+  <!-- Bank heist raiders: anyone holding silver runs for the getaway craft; the rest defend themselves up close, grab silver, and fall back to a normal assault once it's gone. -->
   <DutyDef>
     <defName>BoR_BankHeist</defName>
     <alwaysShowWeapon>true</alwaysShowWeapon>
     <thinkNode Class="ThinkNode_Priority">
       <subNodes>
+        <li Class="BankOfRimica.JobGiver_EscapeWithBullion" />
         <li Class="JobGiver_TakeCombatEnhancingDrug" />
         <li Class="JobGiver_AIFightEnemies">
           <targetAcquireRadius>8</targetAcquireRadius>
@@ -54,7 +69,7 @@
       <li>EdgeDrop</li>
     </arriveModes>
     <letterLabelEnemy>Bank heist</letterLabelEnemy>
-    <arrivalTextEnemy>They have come for the Bank of Rimica's bullion. They will grab every bar they can carry and run for the map edge. Every bar they get away with will be charged to you.</arrivalTextEnemy>
+    <arrivalTextEnemy>They have come for the Bank of Rimica's bullion. Once they have silver they will call in a getaway craft. Anyone who boards it and takes off is gone for good, and every bar they get away with will be charged to you. Destroy the craft before it lifts off and they'll spill out.</arrivalTextEnemy>
     <letterLabelFriendly>Friendlies</letterLabelFriendly>
     <arrivalTextFriendly>They are here.</arrivalTextFriendly>
   </RaidStrategyDef>

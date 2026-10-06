@@ -191,6 +191,12 @@ namespace BankOfRimica
             return false;
         }
 
+        public static bool LandingRectClear(Map map, IntVec3 center) =>
+            GenAdj.OccupiedRect(center, Rot4.North, ShuttleSize).Cells.All(x => GoodLandingCell(map, x));
+
+        public static bool InLandingRect(IntVec3 center, IntVec3 c) =>
+            GenAdj.OccupiedRect(center, Rot4.North, ShuttleSize).ExpandedBy(1).Contains(c);
+
         private static bool GoodLandingCell(Map map, IntVec3 c)
         {
             return c.InBounds(map) && !c.Fogged(map) && c.Standable(map) && !c.Roofed(map) &&

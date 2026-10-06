@@ -117,12 +117,13 @@ namespace BankOfRimica
         }
     }
 
-    /// <summary>Go for the closest reachable bank bullion, bashing through doors if need be, and run off the map with it.</summary>
+    /// <summary>Grab the closest reachable silver, bashing through doors if need be.</summary>
     public class JobGiver_StealBullion : ThinkNode_JobGiver
     {
         protected override Job TryGiveJob(Pawn pawn)
         {
             if (pawn.Map == null || !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation)) return null;
+
             if (pawn.carryTracker.CarriedThing != null) return null;
 
             List<Thing> bullion = pawn.Map.listerThings.ThingsOfDef(BoR_DefOf.BoR_Bullion);
@@ -133,13 +134,58 @@ namespace BankOfRimica
                 t => t.Spawned && !t.IsBurning() && pawn.CanReserve(t));
             if (target == null) return null;
 
-            if (!RCellFinder.TryFindBestExitSpot(pawn, out IntVec3 exit, TraverseMode.ByPawn)) return null;
-
-            Job job = JobMaker.MakeJob(JobDefOf.Steal, target, exit);
+            Job job = JobMaker.MakeJob(BoR_DefOf.BoR_StealBullion, target);
             job.count = target.stackCount;
             job.canBashDoors = true;
             job.locomotionUrgency = LocomotionUrgency.Sprint;
             return job;
+        }
+
+    }
+
+    /// <summary>Runs before anything else in the heist duty so a robber with silver never stops to fight.</summary>
+    public class JobGiver_EscapeWithBullion : ThinkNode_JobGiver
+    {
+        protected override Job TryGiveJob(Pawn pawn)
+        {
+            Thing carried = pawn.carryTracker?.CarriedThing;
+            if (pawn.Map == null || carried == null || carried.def != BoR_DefOf.BoR_Bullion) return null;
+            return Escape(pawn);
+        }
+
+        private static Job Escape(Pawn pawn)
+        {
+            GetawayCraft craft = GetawayUtility.NearestCraft(pawn);
+            if (craft != null)
+            {
+                Job board = JobMaker.MakeJob(BoR_DefOf.BoR_BoardGetaway, craft.thing);
+                board.canBashDoors = true;
+                board.locomotionUrgency = LocomotionUrgency.Sprint;
+                return board;
+            }
+
+            // Shuttle still inbound: head for the landing zone and wait for it.
+            HeistGetaway g = GetawayUtility.For(pawn.GetLord());
+            if (g != null && g.shuttleIncoming && g.landingSpot.IsValid &&
+                CellFinder.TryFindRandomCellNear(g.landingSpot, pawn.Map, 6,
+                    c => c.Standable(pawn.Map) && !BankShuttleUtility.InLandingRect(g.landingSpot, c) && pawn.CanReach(c, PathEndMode.OnCell, Danger.Deadly, true, true, TraverseMode.ByPawn),
+                    out IntVec3 waitAt))
+            {
+                if (pawn.Position.DistanceTo(g.landingSpot) < 9f) return JobMaker.MakeJob(JobDefOf.Wait_Combat, 120, true);
+                Job go = JobMaker.MakeJob(JobDefOf.Goto, waitAt);
+                go.canBashDoors = true;
+                go.locomotionUrgency = LocomotionUrgency.Sprint;
+                go.expiryInterval = 300;
+                return go;
+            }
+
+            // No way out but on foot.
+            if (!RCellFinder.TryFindBestExitSpot(pawn, out IntVec3 exit, TraverseMode.ByPawn)) return null;
+            Job run = JobMaker.MakeJob(JobDefOf.Goto, exit);
+            run.exitMapOnArrival = true;
+            run.canBashDoors = true;
+            run.locomotionUrgency = LocomotionUrgency.Sprint;
+            return run;
         }
     }
 }

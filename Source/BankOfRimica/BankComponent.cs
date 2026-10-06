@@ -39,6 +39,12 @@ namespace BankOfRimica
 
         private int offersGeneratedTick = -999999;
 
+        // Bank heist getaways in progress
+        public List<HeistGetaway> getaways = new List<HeistGetaway>();
+        private int nextGetawayId;
+
+        public int NextGetawayId() => ++nextGetawayId;
+
         public BankComponent(Game game)
         {
             GauntletCompat.Clear();
@@ -68,11 +74,14 @@ namespace BankOfRimica
             Scribe_Collections.Look(ref collectionOffers, "collectionOffers", LookMode.Deep);
             Scribe_Deep.Look(ref collection, "collection");
             Scribe_Values.Look(ref offersGeneratedTick, "offersGeneratedTick", -999999);
+            Scribe_Collections.Look(ref getaways, "getaways", LookMode.Deep);
+            Scribe_Values.Look(ref nextGetawayId, "nextGetawayId");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 custodyOffers ??= new List<CustodyContract>();
                 collectionOffers ??= new List<CollectionContract>();
+                getaways ??= new List<HeistGetaway>();
                 collectionOffers.RemoveAll(c => c.TargetGone);
             }
         }
@@ -80,7 +89,11 @@ namespace BankOfRimica
         public override void GameComponentTick()
         {
             int now = Now;
-            if (now % 30 == 0) GauntletCompat.Tick();
+            if (now % 30 == 0)
+            {
+                GauntletCompat.Tick();
+                GetawayUtility.Tick();
+            }
             if (now % TickInterval != 0) return;
 
             TickInterest(now);
