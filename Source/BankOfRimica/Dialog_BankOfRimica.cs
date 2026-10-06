@@ -198,7 +198,7 @@ namespace BankOfRimica
                 return;
             }
 
-            l.Label("The bank needs somewhere off its books to hold reserves. Host a pallet of its silver bars (10,000 silver each) and get paid for it. You choose where the pallet goes; a bank shuttle delivers it and collects it at the end.");
+            l.Label("The bank needs somewhere off its books to hold reserves. Host a crate of its silver bars (10,000 silver each) and get paid for it. You choose where the crate goes; a bank shuttle delivers it and collects it at the end.");
             GUI.color = new Color(1f, 0.75f, 0.4f);
             l.Label("Warning: the silver counts toward your colony wealth, attracts many more raids, and will draw at least one massive bank heist. Every missing bar is charged against you.");
             GUI.color = Color.white;
@@ -209,7 +209,7 @@ namespace BankOfRimica
                 if (Button(l, "Accept this contract", true))
                 {
                     Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
-                        $"Host {offer.bullionCount} silver bars for {offer.durationDays} days? You'll choose where the bank's pallet goes. Expect a bank heist.",
+                        $"Host {offer.bullionCount} silver bars for {offer.durationDays} days? You'll choose where the bank's crate goes. Expect a bank heist.",
                         () => { Close(); Bank.BeginCustodyPlacement(map, offer); }));
                 }
                 l.Gap(6f);

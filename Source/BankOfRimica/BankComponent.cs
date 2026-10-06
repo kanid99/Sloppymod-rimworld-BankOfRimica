@@ -370,13 +370,13 @@ namespace BankOfRimica
 
         // ---------------------------------------------------------------- custody
 
-        /// <summary>Starts placement mode so the player picks where the bank pallet goes.</summary>
+        /// <summary>Starts placement mode so the player picks where the bank crate goes.</summary>
         public void BeginCustodyPlacement(Map map, CustodyContract offer)
         {
             if (custody != null || !CanUseServices || map == null || !custodyOffers.Contains(offer)) return;
             Current.Game.CurrentMap = map;
             Find.DesignatorManager.Select(new Designator_PlaceBankPallet(map, offer));
-            Messages.Message("Choose where the bank should set down its pallet.", MessageTypeDefOf.NeutralEvent, false);
+            Messages.Message("Choose where the bank should set down its crate.", MessageTypeDefOf.NeutralEvent, false);
         }
 
         public bool TryAcceptCustody(Map map, CustodyContract offer, IntVec3 palletCell)
@@ -405,7 +405,7 @@ namespace BankOfRimica
 
             BankShuttleUtility.SendShuttle(map, palletCell, ShuttleMission.Deliver, offer.bullionCount);
             Find.LetterStack.ReceiveLetter("Vault custody contract",
-                $"A {BankUtility.BankName} shuttle is landing to set down a pallet of {offer.bullionCount} silver bars (worth {BankUtility.Money(offer.HoldingValue)}).\n\n" +
+                $"A {BankUtility.BankName} shuttle is landing to set down a crate of {offer.bullionCount} silver bars (worth {BankUtility.Money(offer.HoldingValue)}).\n\n" +
                 $"Keep it safe for {offer.durationDays} days and you will be paid {BankUtility.Money(offer.fee)}. The shuttle will return to collect it; every bar missing then will be charged at {S.theftPenaltyMultiplier:0.##}x its value.\n\n" +
                 "Word of a bank vault travels fast. Expect far more raids than usual, and at least one organised bank heist.",
                 LetterDefOf.NeutralEvent, new LookTargets(palletCell, map));
@@ -472,7 +472,7 @@ namespace BankOfRimica
             float penalty = missing * BankUtility.BullionUnitValue * S.theftPenaltyMultiplier;
             float net = c.fee - penalty;
 
-            string text = $"The {BankUtility.BankName} shuttle has loaded up the bank's pallet and left.\n\n" +
+            string text = $"The {BankUtility.BankName} shuttle has loaded up the bank's crate and left.\n\n" +
                           $"Bars entrusted: {c.bullionCount}\nBars returned: {Mathf.Min(present, c.bullionCount)}\n" +
                           $"Custody fee: {BankUtility.Money(c.fee)}\n";
             if (missing > 0) text += $"Penalty for {missing} missing bars: -{BankUtility.Money(penalty)}\n";
