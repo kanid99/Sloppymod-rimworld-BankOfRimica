@@ -41,6 +41,8 @@ namespace BankOfRimica
         public int mapId = -1;
         public System.Collections.Generic.List<int> heistTicks = new System.Collections.Generic.List<int>();
         public int heistsLaunched;
+        public IntVec3 palletCell = IntVec3.Invalid;
+        public bool collectionDispatched;
 
         public int HoldingValue => bullionCount * BankUtility.BullionUnitValue;
 
@@ -56,6 +58,8 @@ namespace BankOfRimica
             Scribe_Values.Look(ref mapId, "mapId", -1);
             Scribe_Collections.Look(ref heistTicks, "heistTicks", LookMode.Value);
             Scribe_Values.Look(ref heistsLaunched, "heistsLaunched");
+            Scribe_Values.Look(ref palletCell, "palletCell", IntVec3.Invalid);
+            Scribe_Values.Look(ref collectionDispatched, "collectionDispatched");
             if (Scribe.mode == LoadSaveMode.PostLoadInit && heistTicks == null)
                 heistTicks = new System.Collections.Generic.List<int>();
         }

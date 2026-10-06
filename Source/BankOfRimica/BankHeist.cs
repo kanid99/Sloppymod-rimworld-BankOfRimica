@@ -29,6 +29,11 @@ namespace BankOfRimica
                 parms.faction = thieves;
             }
             parms.points = Mathf.Max(parms.points * BankUtility.Settings.heistPointsMultiplier, 800f);
+            // With Vanilla Factions Expanded - Pirates, the robbers crash in on gauntlet ships.
+            if (parms.raidArrivalMode == null && GauntletCompat.ShouldUse)
+            {
+                parms.raidArrivalMode = GauntletCompat.ArrivalMode;
+            }
             return base.TryExecuteWorker(parms);
         }
     }
@@ -39,6 +44,14 @@ namespace BankOfRimica
         public override bool CanUseWith(IncidentParms parms, PawnGroupKindDef groupKind)
         {
             return parms.raidStrategy == def;
+        }
+
+        public override List<Pawn> SpawnThreats(IncidentParms parms)
+        {
+            List<Pawn> pawns = base.SpawnThreats(parms);
+            // Gauntlet ships take the pawns out of this list and give them their own assault lord later.
+            if (GauntletCompat.IsGauntlet(parms)) GauntletCompat.Track(pawns, parms.target as Map, parms.faction);
+            return pawns;
         }
 
         protected override LordJob MakeLordJob(IncidentParms parms, Map map, List<Pawn> pawns, int raidSeed)

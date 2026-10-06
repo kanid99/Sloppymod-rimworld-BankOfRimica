@@ -25,6 +25,7 @@ namespace BankOfRimica
         public float custodyExtraRaidMtbDays = 6f;
         public float heistPointsMultiplier = 2.0f;
         public float theftPenaltyMultiplier = 1.25f;
+        public bool useGauntletForHeists = true;
 
         // Debt collection
         public float collectionCommission = 0.25f;
@@ -45,6 +46,7 @@ namespace BankOfRimica
             Scribe_Values.Look(ref custodyExtraRaidMtbDays, "custodyExtraRaidMtbDays", 6f);
             Scribe_Values.Look(ref heistPointsMultiplier, "heistPointsMultiplier", 2.0f);
             Scribe_Values.Look(ref theftPenaltyMultiplier, "theftPenaltyMultiplier", 1.25f);
+            Scribe_Values.Look(ref useGauntletForHeists, "useGauntletForHeists", true);
             Scribe_Values.Look(ref collectionCommission, "collectionCommission", 0.25f);
         }
 
@@ -76,6 +78,8 @@ namespace BankOfRimica
             Slider(l, "Extra raid MTB during custody (days)", ref custodyExtraRaidMtbDays, 1f, 30f, false);
             Slider(l, "Bank heist raid strength multiplier", ref heistPointsMultiplier, 1f, 5f, false);
             Slider(l, "Penalty per silver of stolen bullion", ref theftPenaltyMultiplier, 1f, 3f, false);
+            l.CheckboxLabeled("Bank heists arrive on gauntlet ships (needs Vanilla Factions Expanded - Pirates)" +
+                              (GauntletCompat.Installed ? "" : " — not installed"), ref useGauntletForHeists);
             l.GapLine();
             l.Label("Debt collection");
             Slider(l, "Collector's commission", ref collectionCommission, 0.05f, 0.75f, true);

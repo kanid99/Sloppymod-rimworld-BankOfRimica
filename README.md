@@ -1,8 +1,9 @@
 # Bank of Rimica — a space bank for RimWorld
 
-A RimWorld mod (1.5 and 1.6) that adds an orbital bank your colony can save with, borrow from, work for, and get hunted by.
+A RimWorld 1.6 mod that adds an orbital bank your colony can save with, borrow from, work for, and get hunted by.
 
-No Harmony dependency. Safe to add to an existing save.
+**Requires the Odyssey DLC.** No Harmony dependency. Safe to add to an existing save.
+Optional: [Vanilla Factions Expanded - Pirates](https://steamcommunity.com/sharedfiles/filedetails/?id=2723801948). If it's installed, bank heists arrive on gauntlet ships.
 
 ## Features
 
@@ -31,11 +32,19 @@ If you miss the grace period, or press **Refuse to pay**:
 - If they refuse, **destroy the settlement** before the deadline. The bank then pays a bonus commission into your savings.
 
 ### Vault custody contracts (and Bank Heists)
-- Hold the bank's reserves for **15, 30 or 60 days** (a quadrum, half a year or a year) for a fee (default 10% of the holding per quadrum).
-- The holding drops in as physical **Rimica bank bullion**. You can't sell it, but it counts toward colony wealth, so raids get bigger.
-- While you hold it, extra raids come (default MTB of 6 days), plus at least one **Bank Heist** per quadrum.
-- **Bank Heist** is a new raid type at double strength (configurable). The raiders defend themselves at close range, but their goal is the bullion. They bash through doors, grab as many bars as they can carry and sprint for the map edge. If they take heavy losses or a day passes, they call it off and flee.
-- When the contract ends, the bank collects its bullion. Each missing bar (stolen, lost or carried off) costs you **1.25× its value**. The penalty comes out of your fee first, then your savings. Anything left over becomes debt, and if you don't pay that debt you get a bounty contract.
+- Host the bank's holdings for **15, 30 or 60 days** (a quadrum, half a year or a year) for a fee (default 10% of the holding per quadrum).
+- When you accept, you **choose where the bank's pallet goes**. A Bank of Rimica shuttle lands nearby, sets down the pallet and loads it with **Rimica silver bars**.
+  - Each bar is worth 10,000 silver, and up to 100 fit in one stack.
+  - The bars use vanilla gold's bar art, recoloured silver, so a stack looks bigger or smaller depending on how many bars are in it.
+- The bars can't be sold. They count toward colony wealth, so raids get bigger.
+- While you hold them, extra raids come (default MTB of 6 days), plus at least one **Bank Heist** per quadrum.
+- **Bank Heist** is a new raid type at double strength (configurable).
+  - The raiders defend themselves at close range, but their goal is the silver. They bash through doors, grab what they can carry and sprint for the map edge.
+  - If they take heavy losses or a day passes, they call it off and flee.
+  - With VFE Pirates installed, they crash in on **gauntlet ships**, then switch back to the heist AI once they're out of the wrecks. You can turn this off in the mod settings.
+- When the contract ends, the shuttle comes back, loads the bars and the pallet, and leaves.
+  - Each missing bar (stolen, lost or carried off) costs you **1.25× its value**.
+  - The penalty comes out of your fee first, then your savings. Anything left over becomes debt, and if you don't pay that debt you get a bounty contract.
 
 All the numbers above can be changed under **Options → Mod settings → Bank of Rimica**.
 
@@ -45,7 +54,8 @@ All the numbers above can be changed under **Options → Mod settings → Bank o
 About/About.xml
 LoadFolders.xml
 Common/Defs, Common/Patches     XML shared by all versions
-1.5/Assemblies, 1.6/Assemblies  compiled BankOfRimica.dll per game version
+1.6/Assemblies                  compiled BankOfRimica.dll
+Source/Art                      script that generates the mod's own textures
 Source/BankOfRimica             C# source
 ```
 
@@ -54,9 +64,15 @@ Source/BankOfRimica             C# source
 You need the .NET SDK (6+). The game's reference assemblies come from the `Krafs.Rimworld.Ref` NuGet package, so you don't need a copy of the game to compile.
 
 ```
-Source/BankOfRimica/build.sh        # builds 1.5 and 1.6 DLLs into their Assemblies folders
+Source/BankOfRimica/build.sh        # builds 1.6/Assemblies/BankOfRimica.dll
 ```
 
+## Art
+- **Silver bars:** vanilla gold bars, desaturated to silver when the game loads. Vanilla gold isn't affected.
+- **Bank pallet:** Odyssey's gold stockpile pallet tinted silver, if a pallet def with "Gold" in its name is found at startup. Otherwise the mod's own pallet texture.
+- **Bank shuttle:** Odyssey's passenger shuttle (`PassengerShuttle`), if found at startup. Otherwise the mod's own shuttle texture.
+- The mod's own textures come from `Source/Art/make_bank_art.py`. The log says which art was used.
+
 ## Notes / known limitations
-- Art is borrowed from vanilla for now: the uplink uses the comms console texture and the bullion uses a tinted gold texture.
+- The uplink uses the vanilla comms console texture.
 - Text is English only and not yet in translation keys.

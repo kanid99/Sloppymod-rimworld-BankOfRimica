@@ -190,27 +190,27 @@ namespace BankOfRimica
             CustodyContract active = Bank.custody;
             if (active != null)
             {
-                l.Label($"Active custody contract: {active.bullionCount} bars of bullion ({BankUtility.Money(active.HoldingValue)}).");
+                l.Label($"Active custody contract: {active.bullionCount} silver bars ({BankUtility.Money(active.HoldingValue)}).");
                 l.Label($"Ends in {BankUtility.Days(active.endTick - Find.TickManager.TicksGame)}. Fee on completion: {BankUtility.Money(active.fee)}.");
-                l.Label($"Bullion currently held by your colony: {BankUtility.CountPlayerBullion(false)} bars.");
+                l.Label($"Silver bars currently held by your colony: {BankUtility.CountPlayerBullion(false)}." + (active.collectionDispatched ? " The bank shuttle is on its way to collect them." : ""));
                 l.Label($"Missing bars are charged at {BankUtility.Settings.theftPenaltyMultiplier:0.##}x value. Bank heists so far: {active.heistsLaunched}.");
                 l.End();
                 return;
             }
 
-            l.Label("The bank needs somewhere off its books to hold reserves. Store its bullion for a while and get paid for it.");
+            l.Label("The bank needs somewhere off its books to hold reserves. Host a pallet of its silver bars (10,000 silver each) and get paid for it. You choose where the pallet goes; a bank shuttle delivers it and collects it at the end.");
             GUI.color = new Color(1f, 0.75f, 0.4f);
-            l.Label("Warning: the bullion counts toward your colony wealth, attracts many more raids, and will draw at least one massive bank heist. Every missing bar is charged against you.");
+            l.Label("Warning: the silver counts toward your colony wealth, attracts many more raids, and will draw at least one massive bank heist. Every missing bar is charged against you.");
             GUI.color = Color.white;
             l.GapLine();
             foreach (CustodyContract offer in Bank.custodyOffers.ToArray())
             {
-                l.Label($"{offer.durationDays} days — hold {offer.bullionCount} bars ({BankUtility.Money(offer.HoldingValue)}), fee {BankUtility.Money(offer.fee)}, heists expected: {Mathf.Max(1, offer.durationDays / GenDate.DaysPerQuadrum)}");
+                l.Label($"{offer.durationDays} days — hold {offer.bullionCount} silver bars ({BankUtility.Money(offer.HoldingValue)}), fee {BankUtility.Money(offer.fee)}, heists expected: {Mathf.Max(1, offer.durationDays / GenDate.DaysPerQuadrum)}");
                 if (Button(l, "Accept this contract", true))
                 {
                     Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
-                        $"Accept {offer.bullionCount} bars of bank bullion for {offer.durationDays} days? Expect a bank heist.",
-                        () => Bank.TryAcceptCustody(map, offer)));
+                        $"Host {offer.bullionCount} silver bars for {offer.durationDays} days? You'll choose where the bank's pallet goes. Expect a bank heist.",
+                        () => { Close(); Bank.BeginCustodyPlacement(map, offer); }));
                 }
                 l.Gap(6f);
             }

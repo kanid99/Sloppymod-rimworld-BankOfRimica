@@ -39,7 +39,10 @@ namespace BankOfRimica
 
         private int offersGeneratedTick = -999999;
 
-        public BankComponent(Game game) { }
+        public BankComponent(Game game)
+        {
+            GauntletCompat.Clear();
+        }
 
         private static BankSettings S => BankUtility.Settings;
         private static int Now => Find.TickManager.TicksGame;
@@ -77,6 +80,7 @@ namespace BankOfRimica
         public override void GameComponentTick()
         {
             int now = Now;
+            if (now % 30 == 0) GauntletCompat.Tick();
             if (now % TickInterval != 0) return;
 
             TickInterest(now);
@@ -331,8 +335,8 @@ namespace BankOfRimica
             for (int i = 0; i < TermDays.Length; i++)
             {
                 int days = TermDays[i];
-                float holding = Mathf.Clamp(wealth * S.custodyHoldingWealthFraction * (1f + 0.25f * i) * Rand.Range(0.85f, 1.15f), 2000f, 200000f);
-                int bars = Mathf.Max(10, Mathf.RoundToInt(holding / unit));
+                float holding = wealth * S.custodyHoldingWealthFraction * (1f + 0.25f * i) * Rand.Range(0.85f, 1.15f);
+                int bars = Mathf.Clamp(Mathf.RoundToInt(holding / unit), 1, BoR_DefOf.BoR_Bullion.stackLimit);
                 custodyOffers.Add(new CustodyContract
                 {
                     durationDays = days,
@@ -366,7 +370,16 @@ namespace BankOfRimica
 
         // ---------------------------------------------------------------- custody
 
-        public bool TryAcceptCustody(Map map, CustodyContract offer)
+        /// <summary>Starts placement mode so the player picks where the bank pallet goes.</summary>
+        public void BeginCustodyPlacement(Map map, CustodyContract offer)
+        {
+            if (custody != null || !CanUseServices || map == null || !custodyOffers.Contains(offer)) return;
+            Current.Game.CurrentMap = map;
+            Find.DesignatorManager.Select(new Designator_PlaceBankPallet(map, offer));
+            Messages.Message("Choose where the bank should set down its pallet.", MessageTypeDefOf.NeutralEvent, false);
+        }
+
+        public bool TryAcceptCustody(Map map, CustodyContract offer, IntVec3 palletCell)
         {
             if (custody != null || !CanUseServices || map == null || !custodyOffers.Contains(offer)) return false;
             custodyOffers.Remove(offer);
@@ -374,6 +387,8 @@ namespace BankOfRimica
             custody.startTick = Now;
             custody.endTick = Now + offer.durationDays * GenDate.TicksPerDay;
             custody.mapId = map.uniqueID;
+            custody.palletCell = palletCell;
+            custody.collectionDispatched = false;
             custody.heistsLaunched = 0;
             custody.heistTicks.Clear();
 
@@ -388,12 +403,12 @@ namespace BankOfRimica
                 custody.heistTicks.Add(Rand.Range(segStart, segEnd));
             }
 
-            BankUtility.DropToColony(map, BoR_DefOf.BoR_Bullion, offer.bullionCount);
+            BankShuttleUtility.SendShuttle(map, palletCell, ShuttleMission.Deliver, offer.bullionCount);
             Find.LetterStack.ReceiveLetter("Vault custody contract",
-                $"The {BankUtility.BankName} is dropping {offer.bullionCount} bars of bank bullion (worth {BankUtility.Money(offer.HoldingValue)}) on your colony.\n\n" +
-                $"Keep it safe for {offer.durationDays} days and you will be paid {BankUtility.Money(offer.fee)}. Every bar missing when the bank collects will be charged at {S.theftPenaltyMultiplier:0.##}x its value.\n\n" +
-                "Word of a bank vault travels fast. Expect far more raids than usual — and at least one organised bank heist.",
-                LetterDefOf.NeutralEvent, new LookTargets(DropCellFinder.TradeDropSpot(map), map));
+                $"A {BankUtility.BankName} shuttle is landing to set down a pallet of {offer.bullionCount} silver bars (worth {BankUtility.Money(offer.HoldingValue)}).\n\n" +
+                $"Keep it safe for {offer.durationDays} days and you will be paid {BankUtility.Money(offer.fee)}. The shuttle will return to collect it; every bar missing then will be charged at {S.theftPenaltyMultiplier:0.##}x its value.\n\n" +
+                "Word of a bank vault travels fast. Expect far more raids than usual, and at least one organised bank heist.",
+                LetterDefOf.NeutralEvent, new LookTargets(palletCell, map));
             return true;
         }
 
@@ -404,7 +419,17 @@ namespace BankOfRimica
 
             if (now >= custody.endTick)
             {
-                SettleCustody();
+                if (!custody.collectionDispatched)
+                {
+                    custody.collectionDispatched = true;
+                    if (BankShuttleUtility.SendShuttle(map, custody.palletCell, ShuttleMission.Collect, 0))
+                    {
+                        Messages.Message($"The {BankUtility.BankName} shuttle is coming to collect its silver.", new LookTargets(custody.palletCell, map), MessageTypeDefOf.NeutralEvent);
+                        return;
+                    }
+                }
+                // No map to land on, or the shuttle never made it: settle on what the colony holds.
+                if (map == null || now >= custody.endTick + GenDate.TicksPerDay) SettleCustody();
                 return;
             }
             if (map == null) return;
@@ -437,16 +462,17 @@ namespace BankOfRimica
             return BoR_DefOf.BoR_BankHeistRaid.Worker.TryExecute(parms);
         }
 
-        private void SettleCustody()
+        public void SettleCustody()
         {
             CustodyContract c = custody;
+            if (c == null) return;
             custody = null;
             int present = BankUtility.CountPlayerBullion(destroy: true);
             int missing = Mathf.Max(0, c.bullionCount - present);
             float penalty = missing * BankUtility.BullionUnitValue * S.theftPenaltyMultiplier;
             float net = c.fee - penalty;
 
-            string text = $"The {BankUtility.BankName} has collected its holding from your colony.\n\n" +
+            string text = $"The {BankUtility.BankName} shuttle has loaded up the bank's pallet and left.\n\n" +
                           $"Bars entrusted: {c.bullionCount}\nBars returned: {Mathf.Min(present, c.bullionCount)}\n" +
                           $"Custody fee: {BankUtility.Money(c.fee)}\n";
             if (missing > 0) text += $"Penalty for {missing} missing bars: -{BankUtility.Money(penalty)}\n";
