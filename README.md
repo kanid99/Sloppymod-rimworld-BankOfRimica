@@ -2,7 +2,7 @@
 
 A RimWorld 1.6 mod that adds an orbital bank your colony can save with, borrow from, work for, and get hunted by.
 
-**Requires the Odyssey DLC.** No Harmony dependency. Safe to add to an existing save.
+**Requires the Odyssey DLC and [Vanilla Quests Expanded - Deadlife](https://github.com/Vanilla-Expanded/VanillaQuestsExpanded-Deadlife)** (which itself needs Anomaly, Vanilla Expanded Framework and Harmony). No Harmony dependency. Safe to add to an existing save.
 Optional: [Vanilla Factions Expanded - Pirates](https://steamcommunity.com/sharedfiles/filedetails/?id=2723801948). If it's installed, bank heists arrive on gauntlet ships.
 
 ## Features
@@ -33,16 +33,17 @@ If you miss the grace period, or press **Refuse to pay**:
 
 ### Vault custody contracts (and Bank Heists)
 - Host the bank's holdings for **15, 30 or 60 days** (a quadrum, half a year or a year) for a fee (default 10% of the holding per quadrum).
-- When you accept, you **choose where the bank's pallet goes**. A Bank of Rimica shuttle lands nearby, sets down the pallet and loads it with **Rimica silver bars**.
+- When you accept, you **choose where the bank's 2x2 crate goes**. A Bank of Rimica shuttle lands nearby, sets down the crate and loads it with **Rimica silver bars**.
+  - The crate uses Deadlife's military crate art: filled with silver while it holds bars, empty once they're gone. Bars stored in it are drawn as part of the crate, with the bar count still shown.
   - Each bar is worth 10,000 silver, and up to 100 fit in one stack.
-  - The bars use vanilla gold's bar art, recoloured silver, so a stack looks bigger or smaller depending on how many bars are in it.
+  - Bars outside the crate (moved, dropped or carried off) use vanilla gold's bar art recoloured to silver, so a pile looks bigger or smaller depending on how many bars are in it.
 - The bars can't be sold. They count toward colony wealth, so raids get bigger.
 - While you hold them, extra raids come (default MTB of 6 days), plus at least one **Bank Heist** per quadrum.
 - **Bank Heist** is a new raid type at double strength (configurable).
   - The raiders defend themselves at close range, but their goal is the silver. They bash through doors, grab what they can carry and sprint for the map edge.
   - If they take heavy losses or a day passes, they call it off and flee.
   - With VFE Pirates installed, they crash in on **gauntlet ships**, then switch back to the heist AI once they're out of the wrecks. You can turn this off in the mod settings.
-- When the contract ends, the shuttle comes back, loads the bars and the pallet, and leaves.
+- When the contract ends, the shuttle comes back, loads the bars and the crate, and leaves.
   - Each missing bar (stolen, lost or carried off) costs you **1.25× its value**.
   - The penalty comes out of your fee first, then your savings. Anything left over becomes debt, and if you don't pay that debt you get a bounty contract.
 
@@ -69,7 +70,7 @@ Source/BankOfRimica/build.sh        # builds 1.6/Assemblies/BankOfRimica.dll
 
 ## Art
 - **Silver bars:** vanilla gold bars, desaturated to silver when the game loads. Vanilla gold isn't affected.
-- **Bank pallet:** Odyssey's gold stockpile pallet tinted silver, if a pallet def with "Gold" in its name is found at startup. Otherwise the mod's own pallet texture.
+- **Bank crate:** Vanilla Quests Expanded - Deadlife's `Loot_LargeMilitaryCrate_Silver` and `Loot_LargeMilitaryCrate_Empty` textures.
 - **Bank shuttle:** Odyssey's passenger shuttle (`PassengerShuttle`), if found at startup. Otherwise the mod's own shuttle texture.
 - The mod's own textures come from `Source/Art/make_bank_art.py`. The log says which art was used.
 

@@ -60,7 +60,7 @@
     <defName>BoR_Bullion</defName>
     <label>Rimica silver bar</label>
     <description>A sealed, serial-numbered bar of refined silver belonging to the Bank of Rimica, worth 10,000 silver. It is held here under a custody contract: it cannot be sold, and every bar that goes missing will be charged to the colony.\n\nThieves love it.</description>
-    <thingClass>ThingWithComps</thingClass>
+    <thingClass>BankOfRimica.Thing_SilverBar</thingClass>
     <category>Item</category>
     <drawerType>MapMeshOnly</drawerType>
     <resourceReadoutPriority>Middle</resourceReadoutPriority>
@@ -96,22 +96,23 @@
     </comps>
   </ThingDef>
 
-  <!-- Dropped by the bank shuttle where the player chooses; holds only bank silver bars. -->
+  <!-- Dropped by the bank shuttle where the player chooses; holds only bank silver bars.
+       Art: Vanilla Quests Expanded - Deadlife military crates (empty here; the silver-filled one while it holds bars). -->
   <ThingDef ParentName="BuildingBase">
     <defName>BoR_BankPallet</defName>
-    <label>Rimica bank pallet</label>
-    <description>A reinforced pallet stamped with the Bank of Rimica seal. It holds the bank's silver bars while your colony hosts them, and goes back on the bank shuttle when the contract ends.</description>
+    <label>Rimica bank crate</label>
+    <description>A reinforced military crate under Bank of Rimica seal. It holds the bank's silver bars while your colony hosts them, and goes back on the bank shuttle when the contract ends.</description>
     <thingClass>BankOfRimica.Building_BankPallet</thingClass>
     <graphicData>
-      <texPath>Things/Building/BoR_BankPallet</texPath>
+      <texPath>Things/Lootable/Loot_LargeMilitaryCrate_Empty</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(1,1)</drawSize>
+      <drawSize>(2,2)</drawSize>
     </graphicData>
     <altitudeLayer>FloorEmplacement</altitudeLayer>
     <passability>Standable</passability>
     <pathCost>30</pathCost>
-    <fillPercent>0.2</fillPercent>
-    <size>(1,1)</size>
+    <fillPercent>0.4</fillPercent>
+    <size>(2,2)</size>
     <rotatable>false</rotatable>
     <useHitPoints>false</useHitPoints>
     <canOverlapZones>false</canOverlapZones>

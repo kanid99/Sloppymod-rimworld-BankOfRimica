@@ -8,10 +8,44 @@ namespace BankOfRimica
 {
     public enum ShuttleMission { Deliver, Collect }
 
-    /// <summary>The bank's storage pallet. Only holds bank silver bars and can't be taken apart by the colony.</summary>
+    /// <summary>
+    /// The bank's crate (Vanilla Quests Expanded - Deadlife military crate art). Only holds bank silver bars and
+    /// can't be taken apart by the colony. Shows the silver-filled crate while it holds bars, the empty one otherwise.
+    /// </summary>
+    [StaticConstructorOnStartup]
     public class Building_BankPallet : Building_Storage
     {
+        private static readonly Graphic FullGraphic = GraphicDatabase.Get<Graphic_Single>(
+            "Things/Lootable/Loot_LargeMilitaryCrate_Silver", ShaderDatabase.Cutout, new Vector2(2f, 2f), Color.white);
+
+        public bool HoldsBars => Spawned && this.OccupiedRect().Cells.Any(c =>
+            c.GetThingList(Map).Any(t => t.def == BoR_DefOf.BoR_Bullion));
+
+        public override Graphic Graphic => HoldsBars ? FullGraphic : base.Graphic;
+
         public override AcceptanceReport DeconstructibleBy(Faction faction) => "Property of the " + BankUtility.BankName + ".";
+
+        public override void Notify_ReceivedThing(Thing newItem)
+        {
+            base.Notify_ReceivedThing(newItem);
+            if (Spawned) DirtyMapMesh(Map);
+        }
+
+        public override void Notify_LostThing(Thing newItem)
+        {
+            base.Notify_LostThing(newItem);
+            if (Spawned) DirtyMapMesh(Map);
+        }
+    }
+
+    /// <summary>A bank silver bar. Stored in the bank crate it's drawn as part of the crate; loose, it shows its stack.</summary>
+    public class Thing_SilverBar : ThingWithComps
+    {
+        public override void Print(SectionLayer layer)
+        {
+            if (Spawned && Position.GetThingList(Map).Any(t => t is Building_BankPallet)) return;
+            base.Print(layer);
+        }
     }
 
     /// <summary>Incoming bank shuttle. On touchdown it becomes a landed shuttle that does the job.</summary>
@@ -116,7 +150,7 @@ namespace BankOfRimica
                 GenPlace.TryPlaceThing(stack, cell, map, ThingPlaceMode.Near);
             }
             FleckMaker.ThrowDustPuff(cell.ToVector3Shifted(), map, 1.5f);
-            Messages.Message($"The {BankUtility.BankName} shuttle has unloaded the bank's silver onto its pallet.",
+            Messages.Message($"The {BankUtility.BankName} shuttle has unloaded the bank's crate of silver.",
                 new LookTargets(pallet), MessageTypeDefOf.NeutralEvent);
         }
 
@@ -137,12 +171,16 @@ namespace BankOfRimica
         private static readonly IntVec2 ShuttleSize = new IntVec2(3, 3);
 
         /// <summary>Open, unroofed 3x3 ground near the pallet, not covering the pallet itself.</summary>
+        public static CellRect PalletRect(IntVec3 palletCell) =>
+            GenAdj.OccupiedRect(palletCell, Rot4.North, BoR_DefOf.BoR_BankPallet.size);
+
         public static bool TryFindLandingSpot(Map map, IntVec3 near, out IntVec3 spot)
         {
+            CellRect keepClear = PalletRect(near).ExpandedBy(1);
             foreach (IntVec3 c in GenRadial.RadialCellsAround(near, 25f, false))
             {
                 CellRect rect = GenAdj.OccupiedRect(c, Rot4.North, ShuttleSize);
-                if (rect.Contains(near) || rect.ExpandedBy(1).Contains(near)) continue;
+                if (rect.Overlaps(keepClear)) continue;
                 if (rect.Cells.All(x => GoodLandingCell(map, x)))
                 {
                     spot = c;
@@ -161,7 +199,8 @@ namespace BankOfRimica
 
         public static IntVec3 FallbackPalletCell(Map map, IntVec3 near)
         {
-            return CellFinder.TryFindRandomCellNear(near, map, 6, c => c.Standable(map) && c.GetFirstBuilding(map) == null, out IntVec3 r) ? r : near;
+            return CellFinder.TryFindRandomCellNear(near, map, 8,
+                c => PalletRect(c).Cells.All(x => x.InBounds(map) && x.Standable(map) && x.GetFirstBuilding(map) == null), out IntVec3 r) ? r : near;
         }
 
         /// <summary>Sends a bank shuttle to the pallet. Returns false if nowhere to land.</summary>
@@ -192,9 +231,9 @@ namespace BankOfRimica
         {
             targetMap = map;
             this.offer = offer;
-            defaultLabel = "Place bank pallet";
-            defaultDesc = $"Choose where the {BankUtility.BankName} will set down its pallet of {offer.bullionCount} silver bars. The bank's shuttle needs open, unroofed ground nearby to land.";
-            icon = ContentFinder<Texture2D>.Get("Things/Building/BoR_BankPallet");
+            defaultLabel = "Place bank crate";
+            defaultDesc = $"Choose where the {BankUtility.BankName} will set down its crate of {offer.bullionCount} silver bars. The bank's shuttle needs open, unroofed ground nearby to land.";
+            icon = ContentFinder<Texture2D>.Get("Things/Lootable/Loot_LargeMilitaryCrate_Silver");
             useMouseIcon = true;
         }
 
@@ -202,9 +241,12 @@ namespace BankOfRimica
         {
             Map map = Map;
             if (map != targetMap) return "Must be placed in the colony that accepted the contract.";
-            if (!c.InBounds(map) || c.Fogged(map)) return false;
-            if (!c.Standable(map)) return "Not standable.";
-            if (c.GetFirstBuilding(map) != null) return "Space occupied.";
+            foreach (IntVec3 x in BankShuttleUtility.PalletRect(c))
+            {
+                if (!x.InBounds(map) || x.Fogged(map)) return false;
+                if (!x.Standable(map)) return "Not standable.";
+                if (x.GetFirstBuilding(map) != null) return "Space occupied.";
+            }
             if (!BankShuttleUtility.TryFindLandingSpot(map, c, out _)) return "No open, unroofed space nearby for the bank shuttle to land.";
             return true;
         }

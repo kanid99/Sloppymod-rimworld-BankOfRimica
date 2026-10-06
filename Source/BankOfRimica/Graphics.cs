@@ -66,45 +66,13 @@ namespace BankOfRimica
         }
     }
 
-    /// <summary>
-    /// Borrows Odyssey art when it can be found: the passenger shuttle for the bank shuttle, and the gold
-    /// stockpile pallet (re-tinted silver) for the bank pallet. Falls back to the mod's own textures.
-    /// </summary>
+    /// <summary>Borrows Odyssey's passenger shuttle art for the bank shuttle when it can be found.</summary>
     [StaticConstructorOnStartup]
     public static class OdysseyArt
     {
         static OdysseyArt()
         {
-            UseGoldPallet();
             UseShuttle();
-        }
-
-        private static void UseGoldPallet()
-        {
-            ThingDef src = DefDatabase<ThingDef>.AllDefs.FirstOrDefault(d =>
-                d.graphicData != null && d.defName.IndexOf("Pallet", System.StringComparison.OrdinalIgnoreCase) >= 0 &&
-                d.defName.IndexOf("Gold", System.StringComparison.OrdinalIgnoreCase) >= 0 && !d.defName.StartsWith("BoR_"));
-            if (src == null)
-            {
-                Log.Message("[Bank of Rimica] No gold stockpile pallet found; using the bank's own pallet art.");
-                return;
-            }
-            ThingDef def = BoR_DefOf.BoR_BankPallet;
-            var data = new GraphicData();
-            data.CopyFrom(src.graphicData);
-            data.drawSize = Vector2.one;          // the bank pallet is a single cell
-            data.color = new Color(0.996f, 0.996f, 0.996f); // keep materials separate from the real gold pallet
-            def.graphicData = data;
-            def.graphic = data.Graphic;
-            foreach (Material mat in new[] { def.graphic.MatSingle, def.graphic.MatNorth, def.graphic.MatEast, def.graphic.MatSouth, def.graphic.MatWest }.Distinct())
-            {
-                if (mat?.mainTexture is Texture2D tex)
-                {
-                    Texture2D silver = SilverTint.Make(tex);
-                    if (silver != null) mat.mainTexture = silver;
-                }
-            }
-            Log.Message($"[Bank of Rimica] Using {src.defName} art (silvered) for the bank pallet.");
         }
 
         private static void UseShuttle()

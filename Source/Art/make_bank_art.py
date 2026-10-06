@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Generates the Bank of Rimica textures (requires Pillow):
 
-  Common/Textures/Things/Building/BoR_BankPallet.png                  the empty bank pallet (storage)
   Common/Textures/Things/Building/BoR_BankShuttle.png                 fallback bank shuttle art (Odyssey's passenger shuttle is used when found)
 
-The silver bars reuse vanilla gold's stack-count textures, desaturated at load (see Graphics.cs).
+The silver bars reuse vanilla gold's stack-count textures, desaturated at load (see Graphics.cs),
+and the bank crate uses Vanilla Quests Expanded - Deadlife's military crate art.
 """
 import math
 import os
@@ -43,36 +43,6 @@ def poly(d, pts, fill, width=LW):
 
 def finish(img, size):
     return img.resize((size, size), Image.LANCZOS)
-
-
-# ------------------------------------------------------------------ pallet
-
-def make_pallet():
-    S = 128 * SCALE
-    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    x0, x1, top, deck_front, bottom = 30, S - 30, 70, 420, 482
-    poly(d, [(x0, top), (x1, top), (x1, deck_front), (x0, deck_front)], WOOD_TOP)
-    planks = 6
-    for i in range(1, planks):
-        y = top + (deck_front - top) * i // planks
-        d.line([(x0 + LW, y), (x1 - LW, y)], fill=WOOD_SEAM, width=6)
-    for i in range(planks):  # nail heads
-        y = top + (deck_front - top) * i // planks + (deck_front - top) // planks // 2
-        for x in (x0 + 26, (x0 + x1) // 2, x1 - 26):
-            d.ellipse([x - 5, y - 5, x + 5, y + 5], fill=WOOD_DARK)
-    poly(d, [(x0, deck_front), (x1, deck_front), (x1, deck_front + 22), (x0, deck_front + 22)], WOOD_FRONT)
-    bw = 84
-    for bx in (x0, (x0 + x1) // 2 - bw // 2, x1 - bw):
-        poly(d, [(bx, deck_front + 22), (bx + bw, deck_front + 22), (bx + bw, bottom), (bx, bottom)], WOOD_FRONT)
-    # bank stencil on the deck
-    cx, cy = S // 2, (top + deck_front) // 2
-    d.ellipse([cx - 60, cy - 60, cx + 60, cy + 60], outline=BANK_BLUE, width=10)
-    d.line([(cx - 30, cy - 18), (cx + 30, cy - 18)], fill=BANK_BLUE, width=10)
-    d.line([(cx - 30, cy + 18), (cx + 18, cy + 18)], fill=BANK_BLUE, width=10)
-    out = os.path.join(ROOT, "Common", "Textures", "Things", "Building")
-    os.makedirs(out, exist_ok=True)
-    finish(img, 128).save(os.path.join(out, "BoR_BankPallet.png"))
 
 
 # ------------------------------------------------------------------ shuttle
@@ -121,6 +91,5 @@ def make_shuttle():
 
 
 if __name__ == "__main__":
-    make_pallet()
     make_shuttle()
     print("done")
