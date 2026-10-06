@@ -33,8 +33,9 @@ If you miss the grace period, or press **Refuse to pay**:
 
 ### Vault custody contracts (and Bank Heists)
 - Host the bank's holdings for **15, 30 or 60 days** (a quadrum, half a year or a year). When you accept, choose your reward:
-  - **1% of the holding in silver**, paid into your savings, or
-  - **5% of the holding as store credit** at the **Rimica Commodity Exchange** (see below).
+  - **1% of the holding in silver per quadrum held**, paid into your savings, or
+  - **5% of the holding per quadrum as store credit** at the **Rimica Commodity Exchange** (see below).
+  - Reward and risk both grow with length. A 60-day contract pays four times the rate of a 15-day one, but it holds more silver, brings four heists instead of one, and each heist hits 25% harder than the last.
 - When you accept, you **choose where the bank's 2x2 crate goes**. A Bank of Rimica shuttle lands nearby, sets down the crate and loads it with **Rimica silver bars**.
   - The crate uses Deadlife's military crate art: filled with silver while it holds bars, empty once they're gone. Bars stored in it are drawn as part of the crate, with the bar count still shown.
   - Each bar is worth 10,000 silver, and up to 100 fit in one stack.
@@ -59,7 +60,7 @@ If you miss the grace period, or press **Refuse to pay**:
   - Gear comes at normal quality, and anything made from a material uses that item's default material.
   - Silver isn't sold, so credit can't be turned back into silver.
 - Buy with store credit earned from custody contracts. Search by name, filter by category, fill a cart (shift-click for 10, ctrl-click for 100), and the order arrives by drop pod.
-- Prices are market value (adjustable multiplier). Unspent credit stays on your account and is never paid out as silver.
+- Everything costs **2× market value** (adjustable in settings). Unspent credit stays on your account and is never paid out as silver.
 
 All the numbers above can be changed under **Options → Mod settings → Bank of Rimica**.
 

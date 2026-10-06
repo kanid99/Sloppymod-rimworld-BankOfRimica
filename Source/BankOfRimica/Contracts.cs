@@ -46,8 +46,10 @@ namespace BankOfRimica
 
         public int HoldingValue => bullionCount * BankUtility.BullionUnitValue;
 
-        public int SilverReward => Mathf.RoundToInt(HoldingValue * BankUtility.Settings.custodySilverReward);
-        public int CreditReward => Mathf.RoundToInt(HoldingValue * BankUtility.Settings.custodyCreditReward);
+        /// <summary>Rewards are a share of the holding per quadrum held, so longer contracts pay more.</summary>
+        public float Quadrums => durationDays / (float)GenDate.DaysPerQuadrum;
+        public int SilverReward => Mathf.RoundToInt(HoldingValue * BankUtility.Settings.custodySilverReward * Quadrums);
+        public int CreditReward => Mathf.RoundToInt(HoldingValue * BankUtility.Settings.custodyCreditReward * Quadrums);
         public int Reward => payInCredit ? CreditReward : SilverReward;
         public string RewardLabel => payInCredit ? BankUtility.Money(CreditReward) + " in store credit" : BankUtility.Money(SilverReward);
 

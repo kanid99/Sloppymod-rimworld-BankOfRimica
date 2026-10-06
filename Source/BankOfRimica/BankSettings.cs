@@ -22,7 +22,8 @@ namespace BankOfRimica
         // Vault custody
         public float custodySilverReward = 0.01f;
         public float custodyCreditReward = 0.05f;
-        public float shopPriceMultiplier = 1.0f;
+        public float shopPriceMultiplier = 2.0f;
+        public float heistEscalation = 0.25f;
         public float custodyHoldingWealthFraction = 0.50f;
         public float custodyExtraRaidMtbDays = 6f;
         public float heistPointsMultiplier = 2.0f;
@@ -47,7 +48,8 @@ namespace BankOfRimica
             Scribe_Values.Look(ref bountyEscalationPerHunt, "bountyEscalationPerHunt", 0.15f);
             Scribe_Values.Look(ref custodySilverReward, "custodySilverReward", 0.01f);
             Scribe_Values.Look(ref custodyCreditReward, "custodyCreditReward", 0.05f);
-            Scribe_Values.Look(ref shopPriceMultiplier, "shopPriceMultiplier", 1.0f);
+            Scribe_Values.Look(ref shopPriceMultiplier, "shopPriceMultiplier", 2.0f);
+            Scribe_Values.Look(ref heistEscalation, "heistEscalation", 0.25f);
             Scribe_Values.Look(ref custodyHoldingWealthFraction, "custodyHoldingWealthFraction", 0.50f);
             Scribe_Values.Look(ref custodyExtraRaidMtbDays, "custodyExtraRaidMtbDays", 6f);
             Scribe_Values.Look(ref heistPointsMultiplier, "heistPointsMultiplier", 2.0f);
@@ -81,12 +83,13 @@ namespace BankOfRimica
             Slider(l, "Bounty hunter escalation per raid", ref bountyEscalationPerHunt, 0f, 0.5f, true);
             l.GapLine();
             l.Label("Vault custody");
-            Slider(l, "Custody reward paid in silver (share of holding)", ref custodySilverReward, 0f, 0.2f, true);
-            Slider(l, "Custody reward as store credit (share of holding)", ref custodyCreditReward, 0f, 0.5f, true);
+            Slider(l, "Custody reward in silver (share of holding per quadrum)", ref custodySilverReward, 0f, 0.2f, true);
+            Slider(l, "Custody reward as store credit (share of holding per quadrum)", ref custodyCreditReward, 0f, 0.5f, true);
             Slider(l, "Commodity shop price multiplier", ref shopPriceMultiplier, 0.5f, 3f, false);
             Slider(l, "Holding size (fraction of colony wealth)", ref custodyHoldingWealthFraction, 0.1f, 2f, true);
             Slider(l, "Extra raid MTB during custody (days)", ref custodyExtraRaidMtbDays, 1f, 30f, false);
             Slider(l, "Bank heist raid strength multiplier", ref heistPointsMultiplier, 1f, 5f, false);
+            Slider(l, "Each later heist in a contract is stronger by", ref heistEscalation, 0f, 1f, true);
             Slider(l, "Penalty per silver of stolen bullion", ref theftPenaltyMultiplier, 1f, 3f, false);
             l.CheckboxLabeled("Bank heists arrive on gauntlet ships (needs Vanilla Factions Expanded - Pirates)" +
                               (GauntletCompat.Installed ? "" : " — not installed"), ref useGauntletForHeists);

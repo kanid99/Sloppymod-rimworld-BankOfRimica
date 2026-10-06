@@ -37,7 +37,10 @@ namespace BankOfRimica
             {
                 parms.faction = thieves;
             }
-            parms.points = Mathf.Max(parms.points * BankUtility.Settings.heistPointsMultiplier, 800f);
+            // Later heists in a long contract come in harder.
+            int earlier = BankUtility.Bank?.custody?.heistsLaunched ?? 0;
+            float escalation = 1f + BankUtility.Settings.heistEscalation * earlier;
+            parms.points = Mathf.Max(parms.points * BankUtility.Settings.heistPointsMultiplier * escalation, 800f);
             return base.TryExecuteWorker(parms);
         }
     }

@@ -207,7 +207,7 @@ namespace BankOfRimica
             l.GapLine();
             foreach (CustodyContract offer in Bank.custodyOffers.ToArray())
             {
-                l.Label($"{offer.durationDays} days — hold {offer.bullionCount} silver bars ({BankUtility.Money(offer.HoldingValue)}), heists expected: {Mathf.Max(1, offer.durationDays / GenDate.DaysPerQuadrum)}");
+                l.Label($"{offer.durationDays} days — hold {offer.bullionCount} silver bars ({BankUtility.Money(offer.HoldingValue)}), heists expected: {Mathf.Max(1, offer.durationDays / GenDate.DaysPerQuadrum)}, each stronger than the last");
                 foreach (bool credit in new[] { false, true })
                 {
                     int reward = credit ? offer.CreditReward : offer.SilverReward;
