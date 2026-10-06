@@ -9,6 +9,22 @@ Optional: [Vanilla Factions Expanded - Pirates](https://steamcommunity.com/share
 
 Build a **Rimica bank uplink** (Misc tab, requires *Microelectronics*, 200 W power) and have a colonist use it to open the bank window.
 
+### Bank opinion
+- The bank keeps an **opinion** of your colony, from -100 to +100, starting at 0. It's shown in the bank window with a tier: blacklisted, distrustful, wary, neutral, valued client, trusted client or preferred partner.
+- **Raised by:**
+  - loans repaid on time (+6)
+  - debts collected (+8)
+  - debtor assets seized (+6)
+  - custody contracts with every bar returned (+5 per quadrum)
+  - paying off a bounty (+10)
+- **Lowered by:**
+  - defaulting (-40)
+  - custody losses (-5, or -15 if they exceed the reward)
+  - missed or abandoned collections (-6 / -3)
+  - late repayment (-3)
+- **Effect on rates:** at +100, loan interest is halved and deposit interest doubled. At -100, loans cost 1.5× and deposits earn nothing. Both strengths are adjustable in settings.
+- The separate **credit rating** still sets how much you can borrow.
+
 ### Savings account
 - Deposit silver from within range of a powered **orbital trade beacon**; withdrawals arrive by drop pod.
 - Earns interest daily (default 3% per quadrum, compounding).
@@ -66,6 +82,9 @@ If you miss the grace period, or press **Refuse to pay**:
 **Optional:** the custody reward rates and the shop price multiplier keep their defaults (1% / 5% per quadrum, 2× prices) unless you tick **Customise rewards and shop prices** at the top of the mod settings. Ticking it shows sliders and a reset button.
 
 All the other numbers above can be changed under **Options → Mod settings → Bank of Rimica**.
+
+## Roadmap
+- **Join the bank / open a branch:** a long-term goal. A colony with high opinion could join the Bank of Rimica and run its own branch.
 
 ## Layout
 

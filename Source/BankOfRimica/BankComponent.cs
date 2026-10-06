@@ -24,6 +24,9 @@ namespace BankOfRimica
 
         // Credit
         public float creditRating = 1f;
+
+        // Opinion of the colony (-100..100): raised by successful missions, sets loan and deposit interest.
+        public float opinion;
         public Loan loan;
 
         // Default / bounty contract
@@ -68,6 +71,7 @@ namespace BankOfRimica
             Scribe_Values.Look(ref lastInterestTick, "lastInterestTick", -1);
             Scribe_Values.Look(ref lifetimeInterest, "lifetimeInterest");
             Scribe_Values.Look(ref creditRating, "creditRating", 1f);
+            Scribe_Values.Look(ref opinion, "opinion");
             Scribe_Deep.Look(ref loan, "loan");
             Scribe_Values.Look(ref bountyActive, "bountyActive");
             Scribe_Values.Look(ref bountyOwed, "bountyOwed");
@@ -107,6 +111,40 @@ namespace BankOfRimica
             TickCollection(now);
         }
 
+        // ---------------------------------------------------------------- opinion
+
+        public const float OpinionMin = -100f, OpinionMax = 100f;
+
+        public void ChangeOpinion(float delta, string reason)
+        {
+            if (Mathf.Abs(delta) < 0.01f) return;
+            float before = opinion;
+            opinion = Mathf.Clamp(opinion + delta, OpinionMin, OpinionMax);
+            if (Mathf.Approximately(before, opinion)) return;
+            string sign = delta > 0 ? "+" : "";
+            Messages.Message($"{BankUtility.BankName} opinion {sign}{delta:0}: {reason} (now {opinion:0}, {OpinionLabel(opinion)}).",
+                delta > 0 ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.NegativeEvent, false);
+        }
+
+        public static string OpinionLabel(float op)
+        {
+            if (op >= 75f) return "preferred partner";
+            if (op >= 40f) return "trusted client";
+            if (op >= 10f) return "valued client";
+            if (op > -10f) return "neutral";
+            if (op > -40f) return "wary";
+            if (op > -75f) return "distrustful";
+            return "blacklisted";
+        }
+
+        /// <summary>Loan interest multiplier: down to (1 - max discount) at +100, up to (1 + max discount) at -100.</summary>
+        public float LoanRateFactor => 1f - S.opinionLoanEffect * opinion / OpinionMax;
+
+        /// <summary>Deposit interest multiplier: up to (1 + max bonus) at +100, down to (1 - max bonus) at -100, never below zero.</summary>
+        public float DepositRateFactor => Mathf.Max(0f, 1f + S.opinionDepositEffect * opinion / OpinionMax);
+
+        public float DepositRate => S.depositInterestPerQuadrum * DepositRateFactor;
+
         // ---------------------------------------------------------------- savings
 
         private void TickInterest(int now)
@@ -116,7 +154,7 @@ namespace BankOfRimica
             {
                 lastInterestTick += GenDate.TicksPerDay;
                 if (balance <= 0f || bountyActive) continue;
-                float interest = balance * S.depositInterestPerQuadrum / GenDate.DaysPerQuadrum;
+                float interest = balance * DepositRate / GenDate.DaysPerQuadrum;
                 balance += interest;
                 lifetimeInterest += interest;
             }
@@ -150,7 +188,7 @@ namespace BankOfRimica
             return Mathf.FloorToInt(limit / 100f) * 100;
         }
 
-        public static float LoanInterestFor(int days) => BankUtility.Settings.loanInterestPerQuadrum * days / GenDate.DaysPerQuadrum;
+        public float LoanInterestFor(int days) => S.loanInterestPerQuadrum * LoanRateFactor * days / GenDate.DaysPerQuadrum;
 
         public bool TryTakeLoan(Map map, int amount, int days)
         {
@@ -184,6 +222,7 @@ namespace BankOfRimica
                 bool onTime = !loan.lateFeeApplied;
                 loan = null;
                 if (onTime) creditRating = Mathf.Min(2f, creditRating + 0.2f);
+                ChangeOpinion(onTime ? 6f : -3f, onTime ? "loan repaid on time" : "loan repaid late");
                 Find.LetterStack.ReceiveLetter("Loan repaid",
                     $"Your debt with the {BankUtility.BankName} is fully settled." +
                     (onTime ? " Prompt repayment has improved your credit rating." : ""),
@@ -235,6 +274,7 @@ namespace BankOfRimica
             balance -= seized;
             debt -= seized;
             creditRating = 0.25f;
+            ChangeOpinion(-40f, "defaulted on a loan");
             CancelCollection(silent: true);
 
             if (debt < 0.5f)
@@ -273,6 +313,7 @@ namespace BankOfRimica
                 huntCount = 0;
                 nextHuntTick = -1;
                 creditRating = Mathf.Max(creditRating, 0.5f);
+                ChangeOpinion(10f, "bounty debt paid in full");
                 Find.LetterStack.ReceiveLetter("Bounty contract lifted",
                     $"Your debt to the {BankUtility.BankName} is paid. The bounty contract on your colony has been withdrawn and the bank will do business with you again — on a probationary credit rating.",
                     LetterDefOf.PositiveEvent);
@@ -515,7 +556,15 @@ namespace BankOfRimica
 
             if (shortfall < 0.5f)
             {
-                if (missing == 0) creditRating = Mathf.Min(2f, creditRating + 0.15f);
+                if (missing == 0)
+                {
+                    creditRating = Mathf.Min(2f, creditRating + 0.15f);
+                    ChangeOpinion(5f * c.Quadrums, "custody contract completed with every bar accounted for");
+                }
+                else
+                {
+                    ChangeOpinion(-5f, "custody contract completed with bars missing");
+                }
                 Find.LetterStack.ReceiveLetter("Custody contract complete", text, missing == 0 ? LetterDefOf.PositiveEvent : LetterDefOf.NeutralEvent);
                 return;
             }
@@ -524,6 +573,7 @@ namespace BankOfRimica
             balance -= seized;
             shortfall -= seized;
             creditRating = Mathf.Max(0.25f, creditRating - 0.3f);
+            ChangeOpinion(-15f, "custody losses exceeded the reward");
             if (seized > 0f) text += $"\n{BankUtility.Money(seized)} has been taken from your savings.";
             if (shortfall >= 0.5f)
             {
@@ -576,7 +626,11 @@ namespace BankOfRimica
         {
             if (collection == null) return;
             collection = null;
-            if (!silent) creditRating = Mathf.Max(0.25f, creditRating - 0.05f);
+            if (!silent)
+            {
+                creditRating = Mathf.Max(0.25f, creditRating - 0.05f);
+                ChangeOpinion(-3f, "debt collection contract abandoned");
+            }
         }
 
         private void TickCollection(int now)
@@ -587,6 +641,7 @@ namespace BankOfRimica
                 int reward = Mathf.RoundToInt(collection.Commission * 1.5f);
                 balance += reward;
                 creditRating = Mathf.Min(2f, creditRating + 0.1f);
+                ChangeOpinion(6f, "defaulted settlement's assets seized");
                 Find.LetterStack.ReceiveLetter("Debtor assets seized",
                     $"The defaulted settlement is no more. The {BankUtility.BankName} has recovered what it could and credited your savings with a {BankUtility.Money(reward)} commission.",
                     LetterDefOf.PositiveEvent);
@@ -600,6 +655,7 @@ namespace BankOfRimica
                     LetterDefOf.NegativeEvent);
                 collection = null;
                 creditRating = Mathf.Max(0.25f, creditRating - 0.1f);
+                ChangeOpinion(-6f, "debt collection deadline missed");
             }
         }
 
@@ -620,6 +676,7 @@ namespace BankOfRimica
                 CaravanInventoryUtility.GiveThing(caravan, silver);
                 s.Faction.TryAffectGoodwillWith(Faction.OfPlayer, -10);
                 creditRating = Mathf.Min(2f, creditRating + 0.1f);
+                ChangeOpinion(8f, "debt collected");
                 collection = null;
                 Find.LetterStack.ReceiveLetter("Debt collected",
                     $"{(negotiator != null ? negotiator.LabelShort : "Your caravan")} convinced {s.LabelCap} to pay its debt of {BankUtility.Money(c.debt)} to the {BankUtility.BankName}.\n\n" +

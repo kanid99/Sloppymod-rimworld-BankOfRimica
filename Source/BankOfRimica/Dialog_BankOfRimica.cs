@@ -110,6 +110,19 @@ namespace BankOfRimica
             return clicked;
         }
 
+        private void DrawOpinion(Listing_Standard l)
+        {
+            float op = Bank.opinion;
+            Rect r = l.GetRect(24f);
+            Widgets.Label(r.LeftPart(0.45f), $"Bank opinion: {op:0} ({BankComponent.OpinionLabel(op)})");
+            Rect bar = new Rect(r.x + r.width * 0.45f, r.y + 4f, r.width * 0.3f, 16f);
+            Widgets.FillableBar(bar, (op - BankComponent.OpinionMin) / (BankComponent.OpinionMax - BankComponent.OpinionMin));
+            Widgets.Label(new Rect(bar.xMax + 8f, r.y, r.xMax - bar.xMax - 8f, r.height),
+                $"loans x{Bank.LoanRateFactor:0.00}, deposits x{Bank.DepositRateFactor:0.00}");
+            TooltipHandler.TipRegion(r, "The bank's opinion of your colony rises with successful missions: loans repaid on time, debts collected, custody contracts with every bar returned. " +
+                                        "Failures and defaults lower it. Higher opinion means cheaper loans and better interest on savings.");
+        }
+
         // ------------------------------------------------------------- tabs
 
         private void DrawAccount(Rect rect)
@@ -117,8 +130,9 @@ namespace BankOfRimica
             var l = new Listing_Standard();
             l.Begin(rect);
             l.Label($"Savings balance: {BankUtility.Money(Bank.balance)}");
-            l.Label($"Interest: {BankUtility.Settings.depositInterestPerQuadrum.ToStringPercent()} per quadrum, paid daily. Earned so far: {BankUtility.Money(Bank.lifetimeInterest)}");
+            l.Label($"Interest: {Bank.DepositRate.ToStringPercent("0.##")} per quadrum, paid daily. Earned so far: {BankUtility.Money(Bank.lifetimeInterest)}");
             l.Label($"Credit rating: {Bank.creditRating:0.00}");
+            DrawOpinion(l);
             l.GapLine();
             l.Label("Deposits are launched from silver within range of a powered orbital trade beacon. Withdrawals arrive by drop pod.");
             int beacon = BankUtility.SilverInBeaconRange(map);
@@ -165,6 +179,7 @@ namespace BankOfRimica
 
             int limit = Bank.CreditLimit(map);
             l.Label($"Credit limit: {BankUtility.Money(limit)} (based on colony wealth and your credit rating of {Bank.creditRating:0.00}).");
+            DrawOpinion(l);
             l.Label("Loan silver is delivered by drop pod. Defaulting means seized deposits and a bounty contract on your colony.");
             l.GapLine();
             AmountField(l, limit);
@@ -174,11 +189,11 @@ namespace BankOfRimica
             foreach (int days in BankComponent.TermDays)
             {
                 Rect r = new Rect(x, termRow.y, 140f, 28f);
-                if (Widgets.RadioButtonLabeled(r, $"{days} days ({BankComponent.LoanInterestFor(days).ToStringPercent()})", loanDays == days)) loanDays = days;
+                if (Widgets.RadioButtonLabeled(r, $"{days} days ({Bank.LoanInterestFor(days).ToStringPercent()})", loanDays == days)) loanDays = days;
                 x += 150f;
             }
             l.Gap(6f);
-            float repay = amount * (1f + BankComponent.LoanInterestFor(loanDays));
+            float repay = amount * (1f + Bank.LoanInterestFor(loanDays));
             l.Label($"You will owe {BankUtility.Money(repay)} in {loanDays} days.");
             if (Button(l, $"Borrow {amount} silver", amount >= 100 && amount <= limit, "invalid amount"))
                 Bank.TryTakeLoan(map, amount, loanDays);

@@ -8,6 +8,10 @@ namespace BankOfRimica
         // Savings
         public float depositInterestPerQuadrum = 0.03f;
 
+        // Bank opinion: how strongly it moves interest rates (at +/-100 opinion)
+        public float opinionLoanEffect = 0.5f;
+        public float opinionDepositEffect = 1.0f;
+
         // Loans
         public float loanInterestPerQuadrum = 0.10f;
         public float creditLimitWealthFraction = 0.20f;
@@ -49,6 +53,8 @@ namespace BankOfRimica
         {
             base.ExposeData();
             Scribe_Values.Look(ref depositInterestPerQuadrum, "depositInterestPerQuadrum", 0.03f);
+            Scribe_Values.Look(ref opinionLoanEffect, "opinionLoanEffect", 0.5f);
+            Scribe_Values.Look(ref opinionDepositEffect, "opinionDepositEffect", 1.0f);
             Scribe_Values.Look(ref loanInterestPerQuadrum, "loanInterestPerQuadrum", 0.10f);
             Scribe_Values.Look(ref creditLimitWealthFraction, "creditLimitWealthFraction", 0.20f);
             Scribe_Values.Look(ref latePenalty, "latePenalty", 0.10f);
@@ -101,11 +107,15 @@ namespace BankOfRimica
                 GUI.color = Color.white;
             }
             l.GapLine();
+            l.Label("Bank opinion");
+            Slider(l, "Loan interest discount at +100 opinion (surcharge at -100)", ref opinionLoanEffect, 0f, 0.9f, true);
+            Slider(l, "Deposit interest bonus at +100 opinion (cut at -100)", ref opinionDepositEffect, 0f, 2f, true);
+            l.GapLine();
             l.Label("Savings");
-            Slider(l, "Deposit interest per quadrum", ref depositInterestPerQuadrum, 0f, 0.25f, true);
+            Slider(l, "Base deposit interest per quadrum", ref depositInterestPerQuadrum, 0f, 0.25f, true);
             l.GapLine();
             l.Label("Loans");
-            Slider(l, "Loan interest per quadrum", ref loanInterestPerQuadrum, 0f, 0.5f, true);
+            Slider(l, "Base loan interest per quadrum", ref loanInterestPerQuadrum, 0f, 0.5f, true);
             Slider(l, "Credit limit (fraction of colony wealth)", ref creditLimitWealthFraction, 0.05f, 1f, true);
             Slider(l, "Late fee", ref latePenalty, 0f, 0.5f, true);
             Slider(l, "Default penalty", ref defaultPenalty, 0f, 1f, true);
