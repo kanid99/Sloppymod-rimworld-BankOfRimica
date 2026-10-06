@@ -19,10 +19,20 @@ namespace BankOfRimica
         public float bountyHuntIntervalDays = 7f;
         public float bountyEscalationPerHunt = 0.15f;
 
+        // Rewards & commodity shop (optional: defaults apply unless customised)
+        public const float DefaultSilverReward = 0.01f;
+        public const float DefaultCreditReward = 0.05f;
+        public const float DefaultShopPriceMultiplier = 2.0f;
+        public bool customRewards;
+        public float custodySilverReward = DefaultSilverReward;
+        public float custodyCreditReward = DefaultCreditReward;
+        public float shopPriceMultiplier = DefaultShopPriceMultiplier;
+
+        public float SilverRewardRate => customRewards ? custodySilverReward : DefaultSilverReward;
+        public float CreditRewardRate => customRewards ? custodyCreditReward : DefaultCreditReward;
+        public float ShopPriceMultiplier => customRewards ? shopPriceMultiplier : DefaultShopPriceMultiplier;
+
         // Vault custody
-        public float custodySilverReward = 0.01f;
-        public float custodyCreditReward = 0.05f;
-        public float shopPriceMultiplier = 2.0f;
         public float heistEscalation = 0.25f;
         public float custodyHoldingWealthFraction = 0.50f;
         public float custodyExtraRaidMtbDays = 6f;
@@ -46,9 +56,10 @@ namespace BankOfRimica
             Scribe_Values.Look(ref gracePeriodDays, "gracePeriodDays", 3f);
             Scribe_Values.Look(ref bountyHuntIntervalDays, "bountyHuntIntervalDays", 7f);
             Scribe_Values.Look(ref bountyEscalationPerHunt, "bountyEscalationPerHunt", 0.15f);
-            Scribe_Values.Look(ref custodySilverReward, "custodySilverReward", 0.01f);
-            Scribe_Values.Look(ref custodyCreditReward, "custodyCreditReward", 0.05f);
-            Scribe_Values.Look(ref shopPriceMultiplier, "shopPriceMultiplier", 2.0f);
+            Scribe_Values.Look(ref customRewards, "customRewards");
+            Scribe_Values.Look(ref custodySilverReward, "custodySilverReward", DefaultSilverReward);
+            Scribe_Values.Look(ref custodyCreditReward, "custodyCreditReward", DefaultCreditReward);
+            Scribe_Values.Look(ref shopPriceMultiplier, "shopPriceMultiplier", DefaultShopPriceMultiplier);
             Scribe_Values.Look(ref heistEscalation, "heistEscalation", 0.25f);
             Scribe_Values.Look(ref custodyHoldingWealthFraction, "custodyHoldingWealthFraction", 0.50f);
             Scribe_Values.Look(ref custodyExtraRaidMtbDays, "custodyExtraRaidMtbDays", 6f);
@@ -64,10 +75,32 @@ namespace BankOfRimica
 
         public void DoWindowContents(Rect inRect)
         {
-            var view = new Rect(0f, 0f, inRect.width - 20f, 1100f);
+            var view = new Rect(0f, 0f, inRect.width - 20f, 1300f);
             Widgets.BeginScrollView(inRect, ref scroll, view);
             var l = new Listing_Standard();
             l.Begin(view);
+            l.Label("Rewards & commodity shop (optional)");
+            l.CheckboxLabeled("Customise rewards and shop prices", ref customRewards,
+                "Off: custody pays 1% of the holding in silver or 5% in store credit per quadrum, and the shop charges 2x market value.");
+            if (customRewards)
+            {
+                Slider(l, "Custody reward in silver (share of holding per quadrum)", ref custodySilverReward, 0f, 0.2f, true);
+                Slider(l, "Custody reward as store credit (share of holding per quadrum)", ref custodyCreditReward, 0f, 0.5f, true);
+                Slider(l, "Commodity shop price multiplier (x market value)", ref shopPriceMultiplier, 0.5f, 5f, false);
+                if (l.ButtonText("Reset to defaults"))
+                {
+                    custodySilverReward = DefaultSilverReward;
+                    custodyCreditReward = DefaultCreditReward;
+                    shopPriceMultiplier = DefaultShopPriceMultiplier;
+                }
+            }
+            else
+            {
+                GUI.color = Color.gray;
+                l.Label($"Using defaults: {DefaultSilverReward.ToStringPercent()} silver or {DefaultCreditReward.ToStringPercent()} store credit per quadrum held; shop prices {DefaultShopPriceMultiplier:0.#}x market value.");
+                GUI.color = Color.white;
+            }
+            l.GapLine();
             l.Label("Savings");
             Slider(l, "Deposit interest per quadrum", ref depositInterestPerQuadrum, 0f, 0.25f, true);
             l.GapLine();
@@ -83,9 +116,6 @@ namespace BankOfRimica
             Slider(l, "Bounty hunter escalation per raid", ref bountyEscalationPerHunt, 0f, 0.5f, true);
             l.GapLine();
             l.Label("Vault custody");
-            Slider(l, "Custody reward in silver (share of holding per quadrum)", ref custodySilverReward, 0f, 0.2f, true);
-            Slider(l, "Custody reward as store credit (share of holding per quadrum)", ref custodyCreditReward, 0f, 0.5f, true);
-            Slider(l, "Commodity shop price multiplier", ref shopPriceMultiplier, 0.5f, 3f, false);
             Slider(l, "Holding size (fraction of colony wealth)", ref custodyHoldingWealthFraction, 0.1f, 2f, true);
             Slider(l, "Extra raid MTB during custody (days)", ref custodyExtraRaidMtbDays, 1f, 30f, false);
             Slider(l, "Bank heist raid strength multiplier", ref heistPointsMultiplier, 1f, 5f, false);

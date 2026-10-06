@@ -61,9 +61,11 @@ If you miss the grace period, or press **Refuse to pay**:
   - **Quality:** items with quality have a quality picker in their row. Better quality costs steeply more: Awful 0.5×, Poor 0.75×, Normal 1×, Good 1.5×, Excellent 2.5×, Masterwork 5× and Legendary 10× the normal price, before the shop's 2× markup. The cart keeps each quality as its own line.
   - Silver isn't sold, so credit can't be turned back into silver.
 - Buy with store credit earned from custody contracts. Search by name, filter by category, fill a cart (shift-click for 10, ctrl-click for 100), and the order arrives by drop pod.
-- Everything costs **2× market value** (adjustable in settings). Unspent credit stays on your account and is never paid out as silver.
+- Everything costs **2× market value**. Unspent credit stays on your account and is never paid out as silver.
 
-All the numbers above can be changed under **Options → Mod settings → Bank of Rimica**.
+**Optional:** the custody reward rates and the shop price multiplier keep their defaults (1% / 5% per quadrum, 2× prices) unless you tick **Customise rewards and shop prices** at the top of the mod settings. Ticking it shows sliders and a reset button.
+
+All the other numbers above can be changed under **Options → Mod settings → Bank of Rimica**.
 
 ## Layout
 

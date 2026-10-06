@@ -16,7 +16,7 @@ namespace BankOfRimica
         public bool HasQuality => def.HasComp(typeof(CompQuality));
 
         /// <summary>Normal-quality price at the shop's markup.</summary>
-        public float Price => Mathf.Max(1f, def.GetStatValueAbstract(StatDefOf.MarketValue, stuff) * BankUtility.Settings.shopPriceMultiplier);
+        public float Price => Mathf.Max(1f, def.GetStatValueAbstract(StatDefOf.MarketValue, stuff) * BankUtility.Settings.ShopPriceMultiplier);
 
         public float PriceAt(QualityCategory q) => HasQuality ? Mathf.Max(1f, Price * CommodityShop.QualityPriceFactor(q)) : Price;
     }
