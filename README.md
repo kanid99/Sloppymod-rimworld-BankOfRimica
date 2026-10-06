@@ -32,7 +32,9 @@ If you miss the grace period, or press **Refuse to pay**:
 - If they refuse, **destroy the settlement** before the deadline. The bank then pays a bonus commission into your savings.
 
 ### Vault custody contracts (and Bank Heists)
-- Host the bank's holdings for **15, 30 or 60 days** (a quadrum, half a year or a year) for a fee (default 10% of the holding per quadrum).
+- Host the bank's holdings for **15, 30 or 60 days** (a quadrum, half a year or a year). When you accept, choose your reward:
+  - **1% of the holding in silver**, paid into your savings, or
+  - **5% of the holding as store credit** at the **Rimica Commodity Exchange** (see below).
 - When you accept, you **choose where the bank's 2x2 crate goes**. A Bank of Rimica shuttle lands nearby, sets down the crate and loads it with **Rimica silver bars**.
   - The crate uses Deadlife's military crate art: filled with silver while it holds bars, empty once they're gone. Bars stored in it are drawn as part of the crate, with the bar count still shown.
   - Each bar is worth 10,000 silver, and up to 100 fit in one stack.
@@ -50,7 +52,14 @@ If you miss the grace period, or press **Refuse to pay**:
   - With VFE Pirates installed, a heist may crash in on **gauntlet ships**, flown by the junkers if they're hostile (otherwise pirates or mercenaries). The chance is 15% normally, and 75% once you hold **1,000,000+ silver** for the bank. The raiders switch back to the heist AI once they're out of the wrecks. You can change both chances, or turn gauntlet heists off, in the mod settings.
 - When the contract ends, the shuttle comes back, loads the bars and the crate, and leaves.
   - Each missing bar (stolen, lost or carried off) costs you **1.25× its value**.
-  - The penalty comes out of your fee first, then your savings. Anything left over becomes debt, and if you don't pay that debt you get a bounty contract.
+  - The penalty comes out of your reward first (silver or credit), then your savings. Anything left over becomes debt, and if you don't pay that debt you get a bounty contract.
+
+### Rimica Commodity Exchange
+- A shop tab in the bank window that sells nearly every item in the game, including mod items. Furniture and other movable buildings come packed up, ready to place.
+  - Gear comes at normal quality, and anything made from a material uses that item's default material.
+  - Silver isn't sold, so credit can't be turned back into silver.
+- Buy with store credit earned from custody contracts. Search by name, filter by category, fill a cart (shift-click for 10, ctrl-click for 100), and the order arrives by drop pod.
+- Prices are market value (adjustable multiplier). Unspent credit stays on your account and is never paid out as silver.
 
 All the numbers above can be changed under **Options → Mod settings → Bank of Rimica**.
 

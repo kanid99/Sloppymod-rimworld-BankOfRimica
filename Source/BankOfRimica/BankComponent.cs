@@ -16,6 +16,9 @@ namespace BankOfRimica
 
         // Savings account
         public float balance;
+
+        // Commodity shop credit (from custody contracts; never paid out as silver)
+        public float storeCredit;
         private int lastInterestTick = -1;
         public float lifetimeInterest;
 
@@ -61,6 +64,7 @@ namespace BankOfRimica
         {
             base.ExposeData();
             Scribe_Values.Look(ref balance, "balance");
+            Scribe_Values.Look(ref storeCredit, "storeCredit");
             Scribe_Values.Look(ref lastInterestTick, "lastInterestTick", -1);
             Scribe_Values.Look(ref lifetimeInterest, "lifetimeInterest");
             Scribe_Values.Look(ref creditRating, "creditRating", 1f);
@@ -354,7 +358,6 @@ namespace BankOfRimica
                 {
                     durationDays = days,
                     bullionCount = bars,
-                    fee = Mathf.RoundToInt(bars * unit * S.custodyFeePerQuadrum * days / GenDate.DaysPerQuadrum),
                 });
             }
         }
@@ -384,9 +387,10 @@ namespace BankOfRimica
         // ---------------------------------------------------------------- custody
 
         /// <summary>Starts placement mode so the player picks where the bank crate goes.</summary>
-        public void BeginCustodyPlacement(Map map, CustodyContract offer)
+        public void BeginCustodyPlacement(Map map, CustodyContract offer, bool payInCredit)
         {
             if (custody != null || !CanUseServices || map == null || !custodyOffers.Contains(offer)) return;
+            offer.payInCredit = payInCredit;
             Current.Game.CurrentMap = map;
             Find.DesignatorManager.Select(new Designator_PlaceBankPallet(map, offer));
             Messages.Message("Choose where the bank should set down its crate.", MessageTypeDefOf.NeutralEvent, false);
@@ -419,7 +423,7 @@ namespace BankOfRimica
             BankShuttleUtility.SendShuttle(map, palletCell, ShuttleMission.Deliver, offer.bullionCount);
             Find.LetterStack.ReceiveLetter("Vault custody contract",
                 $"A {BankUtility.BankName} shuttle is landing to set down a crate of {offer.bullionCount} silver bars (worth {BankUtility.Money(offer.HoldingValue)}).\n\n" +
-                $"Keep it safe for {offer.durationDays} days and you will be paid {BankUtility.Money(offer.fee)}. The shuttle will return to collect it; every bar missing then will be charged at {S.theftPenaltyMultiplier:0.##}x its value.\n\n" +
+                $"Keep it safe for {offer.durationDays} days and you will be paid {offer.RewardLabel}. The shuttle will return to collect it; every bar missing then will be charged at {S.theftPenaltyMultiplier:0.##}x its value.\n\n" +
                 "Word of a bank vault travels fast. Expect far more raids than usual, and at least one organised bank heist.",
                 LetterDefOf.NeutralEvent, new LookTargets(palletCell, map));
             return true;
@@ -483,36 +487,73 @@ namespace BankOfRimica
             int present = BankUtility.CountPlayerBullion(destroy: true);
             int missing = Mathf.Max(0, c.bullionCount - present);
             float penalty = missing * BankUtility.BullionUnitValue * S.theftPenaltyMultiplier;
-            float net = c.fee - penalty;
 
             string text = $"The {BankUtility.BankName} shuttle has loaded up the bank's crate and left.\n\n" +
                           $"Bars entrusted: {c.bullionCount}\nBars returned: {Mathf.Min(present, c.bullionCount)}\n" +
-                          $"Custody fee: {BankUtility.Money(c.fee)}\n";
+                          $"Reward: {c.RewardLabel}\n";
             if (missing > 0) text += $"Penalty for {missing} missing bars: -{BankUtility.Money(penalty)}\n";
 
-            if (net >= 0f)
+            // The penalty eats into the reward first, in whatever form it was paid.
+            float reward = c.Reward;
+            float covered = Mathf.Min(reward, penalty);
+            reward -= covered;
+            float shortfall = penalty - covered;
+
+            if (reward > 0f)
             {
-                balance += net;
-                if (missing == 0) creditRating = Mathf.Min(2f, creditRating + 0.15f);
-                text += $"\n{BankUtility.Money(net)} has been credited to your savings account.";
-                Find.LetterStack.ReceiveLetter("Custody contract complete", text, missing == 0 ? LetterDefOf.PositiveEvent : LetterDefOf.NeutralEvent);
-            }
-            else
-            {
-                float shortfall = -net;
-                float seized = Mathf.Min(balance, shortfall);
-                balance -= seized;
-                shortfall -= seized;
-                creditRating = Mathf.Max(0.25f, creditRating - 0.3f);
-                if (seized > 0f) text += $"\n{BankUtility.Money(seized)} has been taken from your savings.";
-                if (shortfall >= 0.5f)
+                if (c.payInCredit)
                 {
-                    AddDebt(shortfall, "Custody shortfall");
-                    text += $"\nThe remaining {BankUtility.Money(shortfall)} has been added to your debt" +
-                            (bountyActive ? " under the bounty contract." : $". Repay it before the due date or face a bounty contract.");
+                    storeCredit += reward;
+                    text += $"\n{BankUtility.Money(reward)} of store credit is waiting for you at the Rimica Commodity Exchange.";
                 }
-                Find.LetterStack.ReceiveLetter("Custody contract: losses", text, LetterDefOf.NegativeEvent);
+                else
+                {
+                    balance += reward;
+                    text += $"\n{BankUtility.Money(reward)} has been credited to your savings account.";
+                }
             }
+
+            if (shortfall < 0.5f)
+            {
+                if (missing == 0) creditRating = Mathf.Min(2f, creditRating + 0.15f);
+                Find.LetterStack.ReceiveLetter("Custody contract complete", text, missing == 0 ? LetterDefOf.PositiveEvent : LetterDefOf.NeutralEvent);
+                return;
+            }
+
+            float seized = Mathf.Min(balance, shortfall);
+            balance -= seized;
+            shortfall -= seized;
+            creditRating = Mathf.Max(0.25f, creditRating - 0.3f);
+            if (seized > 0f) text += $"\n{BankUtility.Money(seized)} has been taken from your savings.";
+            if (shortfall >= 0.5f)
+            {
+                AddDebt(shortfall, "Custody shortfall");
+                text += $"\nThe remaining {BankUtility.Money(shortfall)} has been added to your debt" +
+                        (bountyActive ? " under the bounty contract." : ". Repay it before the due date or face a bounty contract.");
+            }
+            Find.LetterStack.ReceiveLetter("Custody contract: losses", text, LetterDefOf.NegativeEvent);
+        }
+
+        // ---------------------------------------------------------------- commodity shop
+
+        /// <summary>Spends store credit on an order, delivered by drop pod. Leftover credit stays as credit.</summary>
+        public bool TryPlaceOrder(Map map, Dictionary<ShopEntry, int> cart)
+        {
+            if (map == null || cart.Count == 0) return false;
+            float total = cart.Sum(kv => kv.Key.Price * kv.Value);
+            if (total > storeCredit + 0.01f) return false;
+            storeCredit -= total;
+            var things = new List<Thing>();
+            foreach (KeyValuePair<ShopEntry, int> kv in cart)
+            {
+                if (kv.Value > 0) things.AddRange(CommodityShop.MakeThings(kv.Key, kv.Value));
+            }
+            IntVec3 spot = DropCellFinder.TradeDropSpot(map);
+            DropPodUtility.DropThingsNear(spot, map, things);
+            Find.LetterStack.ReceiveLetter("Order dispatched",
+                $"The Rimica Commodity Exchange has dropped your order ({things.Count} pods' worth, {BankUtility.Money(total)} of credit). Remaining store credit: {BankUtility.Money(storeCredit)}.",
+                LetterDefOf.PositiveEvent, new LookTargets(spot, map));
+            return true;
         }
 
         // ---------------------------------------------------------------- debt collection

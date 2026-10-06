@@ -33,7 +33,7 @@ namespace BankOfRimica
     {
         public int durationDays;
         public int bullionCount;
-        public int fee;
+        public bool payInCredit;
 
         // Set once accepted.
         public int startTick = -1;
@@ -46,13 +46,18 @@ namespace BankOfRimica
 
         public int HoldingValue => bullionCount * BankUtility.BullionUnitValue;
 
+        public int SilverReward => Mathf.RoundToInt(HoldingValue * BankUtility.Settings.custodySilverReward);
+        public int CreditReward => Mathf.RoundToInt(HoldingValue * BankUtility.Settings.custodyCreditReward);
+        public int Reward => payInCredit ? CreditReward : SilverReward;
+        public string RewardLabel => payInCredit ? BankUtility.Money(CreditReward) + " in store credit" : BankUtility.Money(SilverReward);
+
         public Map Map => Find.Maps.Find(m => m.uniqueID == mapId);
 
         public void ExposeData()
         {
             Scribe_Values.Look(ref durationDays, "durationDays");
             Scribe_Values.Look(ref bullionCount, "bullionCount");
-            Scribe_Values.Look(ref fee, "fee");
+            Scribe_Values.Look(ref payInCredit, "payInCredit");
             Scribe_Values.Look(ref startTick, "startTick", -1);
             Scribe_Values.Look(ref endTick, "endTick", -1);
             Scribe_Values.Look(ref mapId, "mapId", -1);

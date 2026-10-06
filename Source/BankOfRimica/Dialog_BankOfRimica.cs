@@ -7,7 +7,7 @@ namespace BankOfRimica
 {
     public class Dialog_BankOfRimica : Window
     {
-        private enum Tab { Account, Loans, Custody, Collection }
+        private enum Tab { Account, Loans, Custody, Collection, Shop }
 
         private readonly Pawn negotiator;
         private readonly Map map;
@@ -17,7 +17,7 @@ namespace BankOfRimica
         private string amountBuffer;
         private int loanDays = 30;
 
-        public override Vector2 InitialSize => new Vector2(720f, 620f);
+        public override Vector2 InitialSize => new Vector2(860f, 700f);
 
         public Dialog_BankOfRimica(Pawn negotiator, Thing uplink)
         {
@@ -56,6 +56,7 @@ namespace BankOfRimica
                 new TabRecord("Loans", () => tab = Tab.Loans, tab == Tab.Loans),
                 new TabRecord("Vault custody", () => tab = Tab.Custody, tab == Tab.Custody),
                 new TabRecord("Debt collection", () => tab = Tab.Collection, tab == Tab.Collection),
+                new TabRecord("Commodity shop", () => tab = Tab.Shop, tab == Tab.Shop),
             };
             Widgets.DrawMenuSection(body);
             TabDrawer.DrawTabs(body, tabs);
@@ -67,6 +68,7 @@ namespace BankOfRimica
                 case Tab.Loans: DrawLoans(inner); break;
                 case Tab.Custody: DrawCustody(inner); break;
                 case Tab.Collection: DrawCollection(inner); break;
+                case Tab.Shop: DrawShop(inner); break;
             }
         }
 
@@ -191,7 +193,7 @@ namespace BankOfRimica
             if (active != null)
             {
                 l.Label($"Active custody contract: {active.bullionCount} silver bars ({BankUtility.Money(active.HoldingValue)}).");
-                l.Label($"Ends in {BankUtility.Days(active.endTick - Find.TickManager.TicksGame)}. Fee on completion: {BankUtility.Money(active.fee)}.");
+                l.Label($"Ends in {BankUtility.Days(active.endTick - Find.TickManager.TicksGame)}. Reward on completion: {active.RewardLabel}.");
                 l.Label($"Silver bars currently held by your colony: {BankUtility.CountPlayerBullion(false)}." + (active.collectionDispatched ? " The bank shuttle is on its way to collect them." : ""));
                 l.Label($"Missing bars are charged at {BankUtility.Settings.theftPenaltyMultiplier:0.##}x value. Bank heists so far: {active.heistsLaunched}.");
                 l.End();
@@ -205,12 +207,19 @@ namespace BankOfRimica
             l.GapLine();
             foreach (CustodyContract offer in Bank.custodyOffers.ToArray())
             {
-                l.Label($"{offer.durationDays} days — hold {offer.bullionCount} silver bars ({BankUtility.Money(offer.HoldingValue)}), fee {BankUtility.Money(offer.fee)}, heists expected: {Mathf.Max(1, offer.durationDays / GenDate.DaysPerQuadrum)}");
-                if (Button(l, "Accept this contract", true))
+                l.Label($"{offer.durationDays} days — hold {offer.bullionCount} silver bars ({BankUtility.Money(offer.HoldingValue)}), heists expected: {Mathf.Max(1, offer.durationDays / GenDate.DaysPerQuadrum)}");
+                foreach (bool credit in new[] { false, true })
                 {
-                    Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
-                        $"Host {offer.bullionCount} silver bars for {offer.durationDays} days? You'll choose where the bank's crate goes. Expect a bank heist.",
-                        () => { Close(); Bank.BeginCustodyPlacement(map, offer); }));
+                    int reward = credit ? offer.CreditReward : offer.SilverReward;
+                    string how = credit ? $"{BankUtility.Money(reward)} in store credit" : BankUtility.Money(reward);
+                    if (Button(l, $"Accept — paid {how}", true))
+                    {
+                        Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                            $"Host {offer.bullionCount} silver bars for {offer.durationDays} days for {how}? " +
+                            (credit ? "Store credit can only be spent at the Rimica Commodity Exchange and is never paid out as silver. " : "") +
+                            "You'll choose where the bank's crate goes. Expect a bank heist.",
+                            () => { Close(); Bank.BeginCustodyPlacement(map, offer, credit); }));
+                    }
                 }
                 l.Gap(6f);
             }
@@ -254,6 +263,120 @@ namespace BankOfRimica
             }
             if (Bank.collectionOffers.Count == 0) l.Label("No collection contracts available right now.");
             l.End();
+        }
+
+        // ------------------------------------------------------------- commodity shop
+
+        private const float ShopRowHeight = 30f;
+        private string shopSearch = "";
+        private string shopCategory;
+        private Vector2 shopScroll;
+        private readonly Dictionary<ShopEntry, int> cart = new Dictionary<ShopEntry, int>();
+
+        private float CartTotal()
+        {
+            float total = 0f;
+            foreach (KeyValuePair<ShopEntry, int> kv in cart) total += kv.Key.Price * kv.Value;
+            return total;
+        }
+
+        private void DrawShop(Rect rect)
+        {
+            float credit = Bank.storeCredit;
+            float total = CartTotal();
+
+            // header: credit, search, category
+            Rect head = new Rect(rect.x, rect.y, rect.width, 30f);
+            Widgets.Label(head.LeftPart(0.4f), $"Store credit: {BankUtility.Money(credit)}");
+            Rect search = new Rect(head.x + head.width * 0.4f, head.y, head.width * 0.32f, 28f);
+            shopSearch = Widgets.TextField(search, shopSearch);
+            if (shopSearch.NullOrEmpty())
+            {
+                GUI.color = Color.gray;
+                Widgets.Label(search.ContractedBy(4f, 2f), "Search...");
+                GUI.color = Color.white;
+            }
+            Rect catRect = new Rect(search.xMax + 8f, head.y, head.xMax - search.xMax - 8f, 28f);
+            if (Widgets.ButtonText(catRect, shopCategory ?? "All categories"))
+            {
+                var options = new List<FloatMenuOption> { new FloatMenuOption("All categories", () => shopCategory = null) };
+                foreach (string c in CommodityShop.Categories)
+                {
+                    string cat = c;
+                    options.Add(new FloatMenuOption(cat, () => shopCategory = cat));
+                }
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+
+            GUI.color = Color.gray;
+            Widgets.Label(new Rect(rect.x, rect.y + 32f, rect.width, 24f),
+                "Earned by taking custody contracts paid in credit. Orders arrive by drop pod. Unspent credit stays on account; it is never paid out as silver.");
+            GUI.color = Color.white;
+
+            // catalogue (only visible rows are drawn)
+            List<ShopEntry> entries = Filtered();
+            Rect outRect = new Rect(rect.x, rect.y + 60f, rect.width, rect.height - 60f - 44f);
+            Rect view = new Rect(0f, 0f, outRect.width - 16f, entries.Count * ShopRowHeight);
+            Widgets.BeginScrollView(outRect, ref shopScroll, view);
+            int first = Mathf.Max(0, Mathf.FloorToInt(shopScroll.y / ShopRowHeight));
+            int last = Mathf.Min(entries.Count - 1, first + Mathf.CeilToInt(outRect.height / ShopRowHeight) + 1);
+            for (int i = first; i <= last; i++)
+            {
+                DrawShopRow(new Rect(0f, i * ShopRowHeight, view.width, ShopRowHeight), entries[i], i);
+            }
+            Widgets.EndScrollView();
+
+            // footer: cart total and order button
+            Rect foot = new Rect(rect.x, rect.yMax - 38f, rect.width, 34f);
+            int items = 0;
+            foreach (int n in cart.Values) items += n;
+            Widgets.Label(foot.LeftPart(0.5f), $"Cart: {items} items, {BankUtility.Money(total)}" + (total > credit ? "  (not enough credit)" : ""));
+            if (Widgets.ButtonText(new Rect(foot.xMax - 300f, foot.y, 140f, 32f), "Clear cart")) cart.Clear();
+            bool canOrder = items > 0 && total <= credit + 0.01f;
+            if (Widgets.ButtonText(new Rect(foot.xMax - 150f, foot.y, 150f, 32f), "Place order", active: canOrder) && canOrder)
+            {
+                if (Bank.TryPlaceOrder(map, cart)) cart.Clear();
+            }
+        }
+
+        private List<ShopEntry> Filtered()
+        {
+            var result = new List<ShopEntry>();
+            foreach (ShopEntry e in CommodityShop.Catalog)
+            {
+                if (shopCategory != null && e.category != shopCategory) continue;
+                if (!shopSearch.NullOrEmpty() && e.label.IndexOf(shopSearch, System.StringComparison.OrdinalIgnoreCase) < 0) continue;
+                result.Add(e);
+            }
+            return result;
+        }
+
+        private void DrawShopRow(Rect row, ShopEntry e, int index)
+        {
+            if (index % 2 == 1) Widgets.DrawLightHighlight(row);
+            Widgets.DrawHighlightIfMouseover(row);
+            Widgets.InfoCardButton(row.x, row.y + 3f, e.def, e.stuff);
+            Widgets.ThingIcon(new Rect(row.x + 28f, row.y + 2f, 26f, 26f), e.def, e.stuff);
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(new Rect(row.x + 60f, row.y, row.width * 0.45f, row.height), e.label);
+            GUI.color = Color.gray;
+            Widgets.Label(new Rect(row.x + 60f + row.width * 0.45f, row.y, 120f, row.height), e.category);
+            GUI.color = Color.white;
+            Widgets.Label(new Rect(row.xMax - 290f, row.y, 100f, row.height), BankUtility.Money(e.Price).Replace(" silver", ""));
+            cart.TryGetValue(e, out int count);
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Widgets.Label(new Rect(row.xMax - 120f, row.y, 50f, row.height), count.ToString());
+            Text.Anchor = TextAnchor.UpperLeft;
+            int step = Event.current.shift ? 10 : Event.current.control ? 100 : 1;
+            if (Widgets.ButtonText(new Rect(row.xMax - 170f, row.y + 2f, 46f, row.height - 4f), "-")) SetCart(e, count - step);
+            if (Widgets.ButtonText(new Rect(row.xMax - 66f, row.y + 2f, 46f, row.height - 4f), "+")) SetCart(e, count + step);
+            TooltipHandler.TipRegion(row, $"{e.label}: {BankUtility.Money(e.Price)} each.\nShift-click for 10, Ctrl-click for 100.");
+        }
+
+        private void SetCart(ShopEntry e, int count)
+        {
+            if (count <= 0) cart.Remove(e);
+            else cart[e] = count;
         }
 
         private void DrawBounty(Rect rect)
