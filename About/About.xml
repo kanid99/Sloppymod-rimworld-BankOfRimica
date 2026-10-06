@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Bank of Rimica</name>
+  <author>kanid99</author>
+  <packageId>kanid99.BankOfRimica</packageId>
+  <url>https://github.com/kanid99/Sloppymod-rimworld-BankOfRimica</url>
+  <supportedVersions>
+    <li>1.5</li>
+    <li>1.6</li>
+  </supportedVersions>
+  <description>A space bank for your colony.
+
+Build a Rimica bank uplink and your colonists can:
+ - Deposit silver (launched from orbital trade beacons) and earn interest.
+ - Take out loans, delivered by drop pod.
+ - Take debt collection contracts against defaulted settlements: send a caravan to lean on them, or destroy them to seize their assets.
+ - Hold the bank's bullion in custody for a quadrum, half a year or a year. The holding counts toward your wealth, draws far more raids and at least one massive Bank Heist raid. Every bar stolen is charged to you.
+
+Default on a loan, or refuse to pay, and the bank seizes your savings and puts out a bounty contract on your colony. Bounty hunters keep coming, bigger each time, until you pay or are destroyed.
+
+Safe to add to an existing save. No Harmony required.</description>
+</ModMetaData>

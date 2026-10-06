@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- Lets caravans press the bank's current debtor settlement for payment. -->
+  <Operation Class="PatchOperationConditional">
+    <xpath>Defs/WorldObjectDef[defName="Settlement"]/comps</xpath>
+    <match Class="PatchOperationAdd">
+      <xpath>Defs/WorldObjectDef[defName="Settlement"]/comps</xpath>
+      <value>
+        <li Class="BankOfRimica.WorldObjectCompProperties_DebtCollection" />
+      </value>
+    </match>
+    <nomatch Class="PatchOperationAdd">
+      <xpath>Defs/WorldObjectDef[defName="Settlement"]</xpath>
+      <value>
+        <comps>
+          <li Class="BankOfRimica.WorldObjectCompProperties_DebtCollection" />
+        </comps>
+      </value>
+    </nomatch>
+  </Operation>
+</Patch>

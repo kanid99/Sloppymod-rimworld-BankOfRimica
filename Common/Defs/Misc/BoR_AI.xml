@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <JobDef>
+    <defName>BoR_UseBankUplink</defName>
+    <driverClass>BankOfRimica.JobDriver_UseBankUplink</driverClass>
+    <reportString>contacting the Bank of Rimica.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
+  <!-- Bank heist raiders: defend themselves up close, otherwise grab bullion and run; fall back to a normal assault once it's gone. -->
+  <DutyDef>
+    <defName>BoR_BankHeist</defName>
+    <alwaysShowWeapon>true</alwaysShowWeapon>
+    <thinkNode Class="ThinkNode_Priority">
+      <subNodes>
+        <li Class="JobGiver_TakeCombatEnhancingDrug" />
+        <li Class="JobGiver_AIFightEnemies">
+          <targetAcquireRadius>8</targetAcquireRadius>
+          <targetKeepRadius>12</targetKeepRadius>
+        </li>
+        <li Class="BankOfRimica.JobGiver_StealBullion" />
+        <li Class="JobGiver_AIFightEnemies">
+          <targetAcquireRadius>65</targetAcquireRadius>
+          <targetKeepRadius>72</targetKeepRadius>
+        </li>
+        <li Class="JobGiver_AITrashColonyClose" />
+        <li Class="JobGiver_AITrashBuildingsDistant" />
+        <li Class="JobGiver_AIGotoNearestHostile" />
+        <li Class="JobGiver_AISapper">
+          <canMineNonMineables>false</canMineNonMineables>
+        </li>
+      </subNodes>
+    </thinkNode>
+  </DutyDef>
+
+  <RaidStrategyDef>
+    <defName>BoR_BankHeistStrategy</defName>
+    <workerClass>BankOfRimica.RaidStrategyWorker_BankHeist</workerClass>
+    <selectionWeightPerPointsCurve>
+      <points>
+        <li>(0, 0)</li>
+        <li>(100000, 0)</li>
+      </points>
+    </selectionWeightPerPointsCurve>
+    <pointsFactorCurve>
+      <points>
+        <li>(0, 1)</li>
+        <li>(100000, 1)</li>
+      </points>
+    </pointsFactorCurve>
+    <arriveModes>
+      <li>EdgeWalkIn</li>
+      <li>EdgeDrop</li>
+    </arriveModes>
+    <letterLabelEnemy>Bank heist</letterLabelEnemy>
+    <arrivalTextEnemy>They have come for the Bank of Rimica's bullion. They will grab every bar they can carry and run for the map edge. Every bar they get away with will be charged to you.</arrivalTextEnemy>
+    <letterLabelFriendly>Friendlies</letterLabelFriendly>
+    <arrivalTextFriendly>They are here.</arrivalTextFriendly>
+  </RaidStrategyDef>
+
+  <!-- Never picked by storytellers (baseChance 0); launched by the custody contract. -->
+  <IncidentDef>
+    <defName>BoR_BankHeistRaid</defName>
+    <label>bank heist</label>
+    <category>ThreatBig</category>
+    <targetTags>
+      <li>Map_PlayerHome</li>
+    </targetTags>
+    <workerClass>BankOfRimica.IncidentWorker_BankHeist</workerClass>
+    <baseChance>0</baseChance>
+    <pointsScaleable>true</pointsScaleable>
+    <letterDef>ThreatBig</letterDef>
+  </IncidentDef>
+
+</Defs>

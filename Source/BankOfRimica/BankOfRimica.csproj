@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Build for a specific game version with: dotnet build -c Release -p:RimVersion=1.6 -->
+  <PropertyGroup>
+    <RimVersion Condition="'$(RimVersion)' == ''">1.6</RimVersion>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>BankOfRimica</RootNamespace>
+    <AssemblyName>BankOfRimica</AssemblyName>
+    <OutputPath>../../$(RimVersion)/Assemblies/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugType>none</DebugType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RimVersion)' == '1.5'">
+    <DefineConstants>$(DefineConstants);RW15</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RimVersion)' == '1.5'">
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.4409" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RimVersion)' == '1.6'">
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4871" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
