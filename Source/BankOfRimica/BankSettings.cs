@@ -26,6 +26,8 @@ namespace BankOfRimica
         public float heistPointsMultiplier = 2.0f;
         public float theftPenaltyMultiplier = 1.25f;
         public bool useGauntletForHeists = true;
+        public float gauntletChance = 0.15f;
+        public float gauntletChanceMillion = 0.75f;
 
         // Debt collection
         public float collectionCommission = 0.25f;
@@ -47,6 +49,8 @@ namespace BankOfRimica
             Scribe_Values.Look(ref heistPointsMultiplier, "heistPointsMultiplier", 2.0f);
             Scribe_Values.Look(ref theftPenaltyMultiplier, "theftPenaltyMultiplier", 1.25f);
             Scribe_Values.Look(ref useGauntletForHeists, "useGauntletForHeists", true);
+            Scribe_Values.Look(ref gauntletChance, "gauntletChance", 0.15f);
+            Scribe_Values.Look(ref gauntletChanceMillion, "gauntletChanceMillion", 0.75f);
             Scribe_Values.Look(ref collectionCommission, "collectionCommission", 0.25f);
         }
 
@@ -80,6 +84,8 @@ namespace BankOfRimica
             Slider(l, "Penalty per silver of stolen bullion", ref theftPenaltyMultiplier, 1f, 3f, false);
             l.CheckboxLabeled("Bank heists arrive on gauntlet ships (needs Vanilla Factions Expanded - Pirates)" +
                               (GauntletCompat.Installed ? "" : " — not installed"), ref useGauntletForHeists);
+            Slider(l, "Chance a bank heist uses gauntlet ships", ref gauntletChance, 0f, 1f, true);
+            Slider(l, "...when holding 1,000,000+ silver for the bank", ref gauntletChanceMillion, 0f, 1f, true);
             l.GapLine();
             l.Label("Debt collection");
             Slider(l, "Collector's commission", ref collectionCommission, 0.05f, 0.75f, true);

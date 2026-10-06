@@ -29,8 +29,9 @@ namespace BankOfRimica
                 parms.faction = thieves;
             }
             parms.points = Mathf.Max(parms.points * BankUtility.Settings.heistPointsMultiplier, 800f);
-            // With Vanilla Factions Expanded - Pirates, the robbers crash in on gauntlet ships.
-            if (parms.raidArrivalMode == null && GauntletCompat.ShouldUse)
+            // With Vanilla Factions Expanded - Pirates, the robbers may crash in on gauntlet ships,
+            // and almost certainly will once the colony holds a million silver for the bank.
+            if (parms.raidArrivalMode == null && GauntletCompat.ShouldUse && Rand.Chance(GauntletCompat.Chance(BankUtility.Bank?.custody)))
             {
                 parms.raidArrivalMode = GauntletCompat.ArrivalMode;
             }

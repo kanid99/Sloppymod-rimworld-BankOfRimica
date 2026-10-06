@@ -3,7 +3,7 @@
 A RimWorld 1.6 mod that adds an orbital bank your colony can save with, borrow from, work for, and get hunted by.
 
 **Requires the Odyssey DLC and [Vanilla Quests Expanded - Deadlife](https://github.com/Vanilla-Expanded/VanillaQuestsExpanded-Deadlife)** (which itself needs Anomaly, Vanilla Expanded Framework and Harmony). No Harmony dependency. Safe to add to an existing save.
-Optional: [Vanilla Factions Expanded - Pirates](https://steamcommunity.com/sharedfiles/filedetails/?id=2723801948). If it's installed, bank heists arrive on gauntlet ships.
+Optional: [Vanilla Factions Expanded - Pirates](https://steamcommunity.com/sharedfiles/filedetails/?id=2723801948). If it's installed, bank heists can arrive on gauntlet ships.
 
 ## Features
 
@@ -42,7 +42,7 @@ If you miss the grace period, or press **Refuse to pay**:
 - **Bank Heist** is a new raid type at double strength (configurable).
   - The raiders defend themselves at close range, but their goal is the silver. They bash through doors, grab what they can carry and sprint for the map edge.
   - If they take heavy losses or a day passes, they call it off and flee.
-  - With VFE Pirates installed, they crash in on **gauntlet ships**, then switch back to the heist AI once they're out of the wrecks. You can turn this off in the mod settings.
+  - With VFE Pirates installed, a heist may crash in on **gauntlet ships** (15% chance), and is far more likely to (75%) once you hold **1,000,000+ silver** for the bank. The raiders switch back to the heist AI once they're out of the wrecks. You can change both chances, or turn gauntlet heists off, in the mod settings.
 - When the contract ends, the shuttle comes back, loads the bars and the crate, and leaves.
   - Each missing bar (stolen, lost or carried off) costs you **1.25× its value**.
   - The penalty comes out of your fee first, then your savings. Anything left over becomes debt, and if you don't pay that debt you get a bounty contract.

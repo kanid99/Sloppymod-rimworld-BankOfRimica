@@ -69,6 +69,15 @@ namespace BankOfRimica
             }
         }
 
+        public const int MillionSilver = 1000000;
+
+        /// <summary>Chance this heist comes on gauntlet ships: much higher once the bank holding reaches a million silver.</summary>
+        public static float Chance(CustodyContract custody)
+        {
+            BankSettings s = BankUtility.Settings;
+            return custody != null && custody.HoldingValue >= MillionSilver ? s.gauntletChanceMillion : s.gauntletChance;
+        }
+
         public static bool IsGauntlet(IncidentParms parms) => parms.raidArrivalMode != null && parms.raidArrivalMode == ArrivalMode;
 
         public static void Track(List<Pawn> pawns, Map map, Faction faction)
