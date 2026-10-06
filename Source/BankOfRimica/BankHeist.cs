@@ -20,6 +20,15 @@ namespace BankOfRimica
         protected override bool TryExecuteWorker(IncidentParms parms)
         {
             parms.raidStrategy = BoR_DefOf.BoR_BankHeistStrategy;
+            // With Vanilla Factions Expanded - Pirates, the robbers may crash in on gauntlet ships,
+            // and almost certainly will once the colony holds a million silver for the bank.
+            bool gauntlet = parms.raidArrivalMode == null && GauntletCompat.ShouldUse && Rand.Chance(GauntletCompat.Chance(BankUtility.Bank?.custody));
+            if (gauntlet)
+            {
+                parms.raidArrivalMode = GauntletCompat.ArrivalMode;
+                // Gauntlet ships belong to the junkers (or pirates/mercenaries if the junkers aren't hostile).
+                if (parms.faction == null) parms.faction = GauntletCompat.PreferredFaction();
+            }
             // Heists need hands: pick a hostile humanlike faction rather than mechanoids or insects.
             if (parms.faction == null &&
                 Find.FactionManager.AllFactions
@@ -29,12 +38,6 @@ namespace BankOfRimica
                 parms.faction = thieves;
             }
             parms.points = Mathf.Max(parms.points * BankUtility.Settings.heistPointsMultiplier, 800f);
-            // With Vanilla Factions Expanded - Pirates, the robbers may crash in on gauntlet ships,
-            // and almost certainly will once the colony holds a million silver for the bank.
-            if (parms.raidArrivalMode == null && GauntletCompat.ShouldUse && Rand.Chance(GauntletCompat.Chance(BankUtility.Bank?.custody)))
-            {
-                parms.raidArrivalMode = GauntletCompat.ArrivalMode;
-            }
             return base.TryExecuteWorker(parms);
         }
     }
@@ -53,6 +56,19 @@ namespace BankOfRimica
             // Gauntlet ships take the pawns out of this list and give them their own assault lord later.
             if (GauntletCompat.IsGauntlet(parms)) GauntletCompat.Track(pawns, parms.target as Map, parms.faction);
             return pawns;
+        }
+
+        public override void MakeLords(IncidentParms parms, List<Pawn> pawns)
+        {
+            // Warcasket troops cover the thieves instead of stealing (gauntlet heists hand pawns over later, see GauntletCompat).
+            if (!WarcasketUtility.ShouldSplit(pawns, out List<Pawn> cover, out List<Pawn> thieves))
+            {
+                base.MakeLords(parms, pawns);
+                return;
+            }
+            base.MakeLords(parms, thieves);
+            Lord thiefLord = thieves[0].GetLord();
+            LordMaker.MakeNewLord(parms.faction, new LordJob_HeistCover(thiefLord, parms.faction), (Map)parms.target, cover);
         }
 
         protected override LordJob MakeLordJob(IncidentParms parms, Map map, List<Pawn> pawns, int raidSeed)
@@ -146,14 +162,19 @@ namespace BankOfRimica
     /// <summary>Runs before anything else in the heist duty so a robber with silver never stops to fight.</summary>
     public class JobGiver_EscapeWithBullion : ThinkNode_JobGiver
     {
+        /// <summary>Share of robbers who ignore the getaway craft and run for the map edge with their silver.</summary>
+        private const float OnFootChance = 0.4f;
+
         protected override Job TryGiveJob(Pawn pawn)
         {
             Thing carried = pawn.carryTracker?.CarriedThing;
             if (pawn.Map == null || carried == null || carried.def != BoR_DefOf.BoR_Bullion) return null;
-            return Escape(pawn);
+            // Each robber sticks to one plan: some go for the craft, some leg it.
+            if (Rand.ChanceSeeded(OnFootChance, pawn.thingIDNumber ^ 0x4B3A1)) return ExitOnFoot(pawn);
+            return GetawayJob(pawn, allowOnFoot: true);
         }
 
-        private static Job Escape(Pawn pawn)
+        public static Job GetawayJob(Pawn pawn, bool allowOnFoot)
         {
             GetawayCraft craft = GetawayUtility.NearestCraft(pawn);
             if (craft != null)
@@ -179,7 +200,11 @@ namespace BankOfRimica
                 return go;
             }
 
-            // No way out but on foot.
+            return allowOnFoot ? ExitOnFoot(pawn) : null;
+        }
+
+        public static Job ExitOnFoot(Pawn pawn)
+        {
             if (!RCellFinder.TryFindBestExitSpot(pawn, out IntVec3 exit, TraverseMode.ByPawn)) return null;
             Job run = JobMaker.MakeJob(JobDefOf.Goto, exit);
             run.exitMapOnArrival = true;

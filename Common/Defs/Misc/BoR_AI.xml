@@ -49,6 +49,24 @@
     </thinkNode>
   </DutyDef>
 
+  <!-- Warcasket cover force pulling out once the thieves are gone. -->
+  <DutyDef>
+    <defName>BoR_HeistCoverBoard</defName>
+    <alwaysShowWeapon>true</alwaysShowWeapon>
+    <thinkNode Class="ThinkNode_Priority">
+      <subNodes>
+        <li Class="JobGiver_AIFightEnemies">
+          <targetAcquireRadius>6</targetAcquireRadius>
+          <targetKeepRadius>8</targetKeepRadius>
+        </li>
+        <li Class="BankOfRimica.JobGiver_CoverBoardGetaway" />
+        <li Class="JobGiver_ExitMapBest">
+          <defaultLocomotion>Jog</defaultLocomotion>
+        </li>
+      </subNodes>
+    </thinkNode>
+  </DutyDef>
+
   <RaidStrategyDef>
     <defName>BoR_BankHeistStrategy</defName>
     <workerClass>BankOfRimica.RaidStrategyWorker_BankHeist</workerClass>

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using RimWorld;
 using Verse;
@@ -26,7 +27,23 @@ namespace BankOfRimica
             public Map map;
             public Faction faction;
             public Lord lord;
+            public Lord coverLord;
+            public bool splitCover;
             public int expireTick;
+        }
+
+        private static readonly string[] GauntletFactions = { "VFEP_Junkers", "Pirate", "VFEP_Mercenaries" };
+
+        /// <summary>A hostile faction that flies gauntlet ships, junkers first.</summary>
+        public static Faction PreferredFaction()
+        {
+            foreach (string defName in GauntletFactions)
+            {
+                Faction f = Find.FactionManager.AllFactions.FirstOrDefault(x =>
+                    x.def.defName == defName && !x.defeated && !x.Hidden && x.HostileTo(Faction.OfPlayer));
+                if (f != null) return f;
+            }
+            return null;
         }
 
         // Transient: gauntlet ships don't save their passengers either, so there's nothing to restore on load.
@@ -86,6 +103,7 @@ namespace BankOfRimica
             pending.Add(new HeistGroup
             {
                 pawns = new List<Pawn>(pawns),
+                splitCover = WarcasketUtility.ShouldSplit(pawns, out _, out _),
                 map = map,
                 faction = faction,
                 expireTick = Find.TickManager.TicksGame + GenDate.TicksPerHour * 2,
@@ -111,7 +129,7 @@ namespace BankOfRimica
                     if (!p.Spawned || p.Map != group.map) continue;
 
                     Lord current = p.GetLord();
-                    if (current?.LordJob is LordJob_BankHeist)
+                    if (current?.LordJob is LordJob_BankHeist || current?.LordJob is LordJob_HeistCover)
                     {
                         group.pawns.RemoveAt(i);
                         continue;
@@ -121,12 +139,24 @@ namespace BankOfRimica
                         current.RemovePawn(p);
                         if (current.ownedPawns.Count == 0) current.lordManager.RemoveLord(current);
                     }
-                    if (group.lord == null || !group.map.lordManager.lords.Contains(group.lord))
+                    Faction f = group.faction ?? p.Faction;
+                    if (group.lord == null)
                     {
-                        Faction f = group.faction ?? p.Faction;
                         group.lord = LordMaker.MakeNewLord(f, new LordJob_BankHeist(f), group.map);
                     }
-                    group.lord.AddPawn(p);
+                    if (group.splitCover && WarcasketUtility.IsWarcasket(p))
+                    {
+                        // Warcaskets cover the thieves rather than steal.
+                        if (group.coverLord == null || !group.map.lordManager.lords.Contains(group.coverLord))
+                            group.coverLord = LordMaker.MakeNewLord(f, new LordJob_HeistCover(group.lord, f), group.map);
+                        group.coverLord.AddPawn(p);
+                    }
+                    else
+                    {
+                        if (!group.map.lordManager.lords.Contains(group.lord))
+                            group.lord = LordMaker.MakeNewLord(f, new LordJob_BankHeist(f), group.map);
+                        group.lord.AddPawn(p);
+                    }
                     group.pawns.RemoveAt(i);
                 }
                 if (group.pawns.Count == 0 || now > group.expireTick) pending.RemoveAt(g);

@@ -71,12 +71,27 @@ namespace BankOfRimica
 
         public static bool IsGauntletShip(Thing t) => t.def.defName.StartsWith("VFEP_CrashedShip");
 
-        public static HeistGetaway For(Lord lord) => lord == null ? null : All.Find(g => g.lord == lord);
+        /// <summary>Warcasket cover lords share their thieves' getaway.</summary>
+        public static Lord ThiefLordOf(Lord lord) =>
+            lord?.LordJob is LordJob_HeistCover cover && cover.thiefLord != null ? cover.thiefLord : lord;
 
-        /// <summary>Called when a robber first gets their hands on silver.</summary>
+        public static HeistGetaway For(Lord lord)
+        {
+            lord = ThiefLordOf(lord);
+            return lord == null ? null : All.Find(g => g.lord == lord);
+        }
+
+        public static Lord CoverLordFor(HeistGetaway g, Map map) =>
+            map.lordManager.lords.FirstOrDefault(l => l.LordJob is LordJob_HeistCover c && c.thiefLord == g.lord);
+
+        public static bool LordActive(Lord lord, Map map) =>
+            lord != null && map != null && map.lordManager.lords.Contains(lord) &&
+            lord.ownedPawns.Any(p => p.Spawned && !p.Downed && !p.Dead);
+
+        /// <summary>Called when a robber first gets their hands on silver (or the cover force wants to leave).</summary>
         public static void Request(Pawn thief)
         {
-            Lord lord = thief.GetLord();
+            Lord lord = ThiefLordOf(thief.GetLord());
             if (lord == null || For(lord) != null) return;
             BankComponent bank = BankUtility.Bank;
             var g = new HeistGetaway
@@ -154,7 +169,7 @@ namespace BankOfRimica
             HeistGetaway g = For(lord);
             GetawayCraft craft = g?.crafts.Find(c => c.thing == craftThing);
             if (craft == null || !craftThing.Spawned) return;
-            lord.Notify_PawnLost(pawn, PawnLostCondition.ExitedMap);
+            lord?.Notify_PawnLost(pawn, PawnLostCondition.ExitedMap);
             pawn.DeSpawn();
             Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
             craft.aboard.Add(pawn);
@@ -186,13 +201,15 @@ namespace BankOfRimica
                     g.crafts.RemoveAt(c);
                 }
 
-                bool robbersLeft = g.lord != null && map.lordManager.lords.Contains(g.lord) &&
-                                   g.lord.ownedPawns.Any(p => p.Spawned && !p.Downed && !p.Dead);
+                bool thievesLeft = LordActive(g.lord, map);
+                bool coverLeft = LordActive(CoverLordFor(g, map), map);
                 bool anyAboard = g.crafts.Any(c => c.aboard.Count > 0);
+                // With a warcasket cover force, the craft waits for them; they only board once the thieves are gone.
                 bool depart = g.crafts.Count > 0 &&
-                              ((anyAboard && (now - g.firstBoardTick >= WaitAfterFirstBoarding || !robbersLeft)) ||
-                               (!robbersLeft && !g.shuttleIncoming) ||
+                              ((!thievesLeft && !coverLeft) ||
+                               (anyAboard && !coverLeft && now - g.firstBoardTick >= WaitAfterFirstBoarding) ||
                                now - g.createdTick >= MaxWait);
+                bool robbersLeft = thievesLeft || coverLeft;
                 if (depart)
                 {
                     Depart(g, map);

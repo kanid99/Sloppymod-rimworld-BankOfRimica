@@ -20,6 +20,7 @@ namespace BankOfRimica
         public static JobDef BoR_StealBullion;
         public static JobDef BoR_BoardGetaway;
         public static DutyDef BoR_BankHeist;
+        public static DutyDef BoR_HeistCoverBoard;
         public static RaidStrategyDef BoR_BankHeistStrategy;
         public static IncidentDef BoR_BankHeistRaid;
 

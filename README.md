@@ -42,11 +42,12 @@ If you miss the grace period, or press **Refuse to pay**:
 - **Bank Heist** is a new raid type at double strength (configurable).
   - The raiders defend themselves at close range, but their goal is the silver. They bash through doors and grab what they can carry.
   - **Getaways:** the first time a raider picks up silver, a **getaway shuttle** lands somewhere outside your home area. In a gauntlet heist, the robbers' crashed **junker ships** are the way out instead.
-  - Raiders carrying silver run for the nearest getaway craft and board it. If none can be reached, they run for the map edge.
-  - The craft lifts off an hour after the first raider boards, or as soon as no raiders are left on the ground. Once it's gone, so are the raiders and the silver aboard. Gauntlet ships take off again using their own flight art.
+  - Raiders carrying silver split up: most run for the nearest getaway craft and board it, and the rest run for the map edge on foot. A raider who can't reach a craft runs for the edge too.
+  - **Warcasket cover force:** raiders in VFE Pirates warcaskets (the junkers' heavy troops) don't steal. They attack the colony to keep you busy while the foot raiders go for the silver. Once every thief has boarded, escaped or died, the warcaskets fall back to their ships, board, and leave too. The craft waits for them.
+  - The craft lifts off once everyone left on the ground has boarded. Without a cover force still fighting, it also lifts off an hour after the first raider boards. Once it's gone, so are the raiders and the silver aboard. Gauntlet ships take off again using their own flight art.
   - **Destroy the craft before it takes off** and everyone aboard spills out of the wreck, still carrying the silver.
   - If they take heavy losses or a day passes, they call off the heist and flee.
-  - With VFE Pirates installed, a heist may crash in on **gauntlet ships** (15% chance), and is far more likely to (75%) once you hold **1,000,000+ silver** for the bank. The raiders switch back to the heist AI once they're out of the wrecks. You can change both chances, or turn gauntlet heists off, in the mod settings.
+  - With VFE Pirates installed, a heist may crash in on **gauntlet ships**, flown by the junkers if they're hostile (otherwise pirates or mercenaries). The chance is 15% normally, and 75% once you hold **1,000,000+ silver** for the bank. The raiders switch back to the heist AI once they're out of the wrecks. You can change both chances, or turn gauntlet heists off, in the mod settings.
 - When the contract ends, the shuttle comes back, loads the bars and the crate, and leaves.
   - Each missing bar (stolen, lost or carried off) costs you **1.25× its value**.
   - The penalty comes out of your fee first, then your savings. Anything left over becomes debt, and if you don't pay that debt you get a bounty contract.
