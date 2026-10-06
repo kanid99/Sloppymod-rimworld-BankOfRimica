@@ -57,7 +57,8 @@ If you miss the grace period, or press **Refuse to pay**:
 
 ### Rimica Commodity Exchange
 - A shop tab in the bank window that sells nearly every item in the game, including mod items. Furniture and other movable buildings come packed up, ready to place.
-  - Gear comes at normal quality, and anything made from a material uses that item's default material.
+  - Anything made from a material uses that item's default material.
+  - **Quality:** items with quality have a quality picker in their row. Better quality costs steeply more: Awful 0.5×, Poor 0.75×, Normal 1×, Good 1.5×, Excellent 2.5×, Masterwork 5× and Legendary 10× the normal price, before the shop's 2× markup. The cart keeps each quality as its own line.
   - Silver isn't sold, so credit can't be turned back into silver.
 - Buy with store credit earned from custody contracts. Search by name, filter by category, fill a cart (shift-click for 10, ctrl-click for 100), and the order arrives by drop pod.
 - Everything costs **2× market value** (adjustable in settings). Unspent credit stays on your account and is never paid out as silver.

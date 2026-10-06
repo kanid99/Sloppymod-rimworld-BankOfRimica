@@ -271,14 +271,18 @@ namespace BankOfRimica
         private string shopSearch = "";
         private string shopCategory;
         private Vector2 shopScroll;
-        private readonly Dictionary<ShopEntry, int> cart = new Dictionary<ShopEntry, int>();
+        private readonly Dictionary<CartKey, int> cart = new Dictionary<CartKey, int>();
+        private readonly Dictionary<ShopEntry, QualityCategory> chosenQuality = new Dictionary<ShopEntry, QualityCategory>();
 
         private float CartTotal()
         {
             float total = 0f;
-            foreach (KeyValuePair<ShopEntry, int> kv in cart) total += kv.Key.Price * kv.Value;
+            foreach (KeyValuePair<CartKey, int> kv in cart) total += kv.Key.Price * kv.Value;
             return total;
         }
+
+        private QualityCategory QualityFor(ShopEntry e) =>
+            chosenQuality.TryGetValue(e, out QualityCategory q) ? q : QualityCategory.Normal;
 
         private void DrawShop(Rect rect)
         {
@@ -330,7 +334,18 @@ namespace BankOfRimica
             Rect foot = new Rect(rect.x, rect.yMax - 38f, rect.width, 34f);
             int items = 0;
             foreach (int n in cart.Values) items += n;
-            Widgets.Label(foot.LeftPart(0.5f), $"Cart: {items} items, {BankUtility.Money(total)}" + (total > credit ? "  (not enough credit)" : ""));
+            Rect summary = foot.LeftPart(0.5f);
+            Widgets.Label(summary, $"Cart: {items} items, {BankUtility.Money(total)}" + (total > credit ? "  (not enough credit)" : ""));
+            if (cart.Count > 0)
+            {
+                var lines = new System.Text.StringBuilder();
+                foreach (KeyValuePair<CartKey, int> kv in cart)
+                {
+                    string q = kv.Key.entry.HasQuality ? $" ({kv.Key.quality.GetLabel()})" : "";
+                    lines.AppendLine($"{kv.Value}x {kv.Key.entry.label}{q} — {BankUtility.Money(kv.Key.Price * kv.Value)}");
+                }
+                TooltipHandler.TipRegion(summary, lines.ToString());
+            }
             if (Widgets.ButtonText(new Rect(foot.xMax - 300f, foot.y, 140f, 32f), "Clear cart")) cart.Clear();
             bool canOrder = items > 0 && total <= credit + 0.01f;
             if (Widgets.ButtonText(new Rect(foot.xMax - 150f, foot.y, 150f, 32f), "Place order", active: canOrder) && canOrder)
@@ -358,25 +373,47 @@ namespace BankOfRimica
             Widgets.InfoCardButton(row.x, row.y + 3f, e.def, e.stuff);
             Widgets.ThingIcon(new Rect(row.x + 28f, row.y + 2f, 26f, 26f), e.def, e.stuff);
             Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(new Rect(row.x + 60f, row.y, row.width * 0.45f, row.height), e.label);
+            Widgets.Label(new Rect(row.x + 60f, row.y, row.width * 0.30f, row.height), e.label);
             GUI.color = Color.gray;
-            Widgets.Label(new Rect(row.x + 60f + row.width * 0.45f, row.y, 120f, row.height), e.category);
+            Widgets.Label(new Rect(row.x + 60f + row.width * 0.30f, row.y, 100f, row.height), e.category);
             GUI.color = Color.white;
-            Widgets.Label(new Rect(row.xMax - 290f, row.y, 100f, row.height), BankUtility.Money(e.Price).Replace(" silver", ""));
-            cart.TryGetValue(e, out int count);
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            // quality picker for gear with quality
+            var key = new CartKey(e, QualityFor(e));
+            Rect qRect = new Rect(row.xMax - 410f, row.y + 2f, 110f, row.height - 4f);
+            if (e.HasQuality)
+            {
+                if (Widgets.ButtonText(qRect, key.quality.GetLabel().CapitalizeFirst()))
+                {
+                    var options = new List<FloatMenuOption>();
+                    foreach (QualityCategory q in QualityUtility.AllQualityCategories)
+                    {
+                        QualityCategory chosen = q;
+                        options.Add(new FloatMenuOption($"{q.GetLabel().CapitalizeFirst()} — {BankUtility.Money(e.PriceAt(q))}", () => chosenQuality[e] = chosen));
+                    }
+                    Find.WindowStack.Add(new FloatMenu(options));
+                }
+            }
+
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(new Rect(row.xMax - 290f, row.y, 100f, row.height), BankUtility.Money(key.Price).Replace(" silver", ""));
+            cart.TryGetValue(key, out int count);
             Text.Anchor = TextAnchor.MiddleCenter;
             Widgets.Label(new Rect(row.xMax - 120f, row.y, 50f, row.height), count.ToString());
             Text.Anchor = TextAnchor.UpperLeft;
             int step = Event.current.shift ? 10 : Event.current.control ? 100 : 1;
-            if (Widgets.ButtonText(new Rect(row.xMax - 170f, row.y + 2f, 46f, row.height - 4f), "-")) SetCart(e, count - step);
-            if (Widgets.ButtonText(new Rect(row.xMax - 66f, row.y + 2f, 46f, row.height - 4f), "+")) SetCart(e, count + step);
-            TooltipHandler.TipRegion(row, $"{e.label}: {BankUtility.Money(e.Price)} each.\nShift-click for 10, Ctrl-click for 100.");
+            if (Widgets.ButtonText(new Rect(row.xMax - 170f, row.y + 2f, 46f, row.height - 4f), "-")) SetCart(key, count - step);
+            if (Widgets.ButtonText(new Rect(row.xMax - 66f, row.y + 2f, 46f, row.height - 4f), "+")) SetCart(key, count + step);
+            string qualityNote = e.HasQuality ? $" at {key.quality.GetLabel()} quality" : "";
+            TooltipHandler.TipRegion(row, $"{e.label}{qualityNote}: {BankUtility.Money(key.Price)} each.\nShift-click for 10, Ctrl-click for 100." +
+                                          (e.HasQuality ? "\nBetter quality costs steeply more." : ""));
         }
 
-        private void SetCart(ShopEntry e, int count)
+        private void SetCart(CartKey key, int count)
         {
-            if (count <= 0) cart.Remove(e);
-            else cart[e] = count;
+            if (count <= 0) cart.Remove(key);
+            else cart[key] = count;
         }
 
         private void DrawBounty(Rect rect)

@@ -537,16 +537,16 @@ namespace BankOfRimica
         // ---------------------------------------------------------------- commodity shop
 
         /// <summary>Spends store credit on an order, delivered by drop pod. Leftover credit stays as credit.</summary>
-        public bool TryPlaceOrder(Map map, Dictionary<ShopEntry, int> cart)
+        public bool TryPlaceOrder(Map map, Dictionary<CartKey, int> cart)
         {
             if (map == null || cart.Count == 0) return false;
             float total = cart.Sum(kv => kv.Key.Price * kv.Value);
             if (total > storeCredit + 0.01f) return false;
             storeCredit -= total;
             var things = new List<Thing>();
-            foreach (KeyValuePair<ShopEntry, int> kv in cart)
+            foreach (KeyValuePair<CartKey, int> kv in cart)
             {
-                if (kv.Value > 0) things.AddRange(CommodityShop.MakeThings(kv.Key, kv.Value));
+                if (kv.Value > 0) things.AddRange(CommodityShop.MakeThings(kv.Key.entry, kv.Value, kv.Key.quality));
             }
             IntVec3 spot = DropCellFinder.TradeDropSpot(map);
             DropPodUtility.DropThingsNear(spot, map, things);

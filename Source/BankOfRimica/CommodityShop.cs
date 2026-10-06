@@ -13,7 +13,31 @@ namespace BankOfRimica
         public string category;
         public string label;
 
+        public bool HasQuality => def.HasComp(typeof(CompQuality));
+
+        /// <summary>Normal-quality price at the shop's markup.</summary>
         public float Price => Mathf.Max(1f, def.GetStatValueAbstract(StatDefOf.MarketValue, stuff) * BankUtility.Settings.shopPriceMultiplier);
+
+        public float PriceAt(QualityCategory q) => HasQuality ? Mathf.Max(1f, Price * CommodityShop.QualityPriceFactor(q)) : Price;
+    }
+
+    /// <summary>One cart line: an item at a chosen quality.</summary>
+    public struct CartKey : System.IEquatable<CartKey>
+    {
+        public ShopEntry entry;
+        public QualityCategory quality;
+
+        public CartKey(ShopEntry entry, QualityCategory quality)
+        {
+            this.entry = entry;
+            this.quality = entry.HasQuality ? quality : QualityCategory.Normal;
+        }
+
+        public float Price => entry.PriceAt(quality);
+
+        public bool Equals(CartKey other) => entry == other.entry && quality == other.quality;
+        public override bool Equals(object obj) => obj is CartKey k && Equals(k);
+        public override int GetHashCode() => entry.GetHashCode() * 31 + (int)quality;
     }
 
     /// <summary>
@@ -63,10 +87,25 @@ namespace BankOfRimica
             return c.LabelCap;
         }
 
+        /// <summary>Better quality costs steeply more; worse quality comes cheap. Relative to normal.</summary>
+        public static float QualityPriceFactor(QualityCategory q)
+        {
+            switch (q)
+            {
+                case QualityCategory.Awful: return 0.5f;
+                case QualityCategory.Poor: return 0.75f;
+                case QualityCategory.Good: return 1.5f;
+                case QualityCategory.Excellent: return 2.5f;
+                case QualityCategory.Masterwork: return 5f;
+                case QualityCategory.Legendary: return 10f;
+                default: return 1f;
+            }
+        }
+
         public static IEnumerable<string> Categories => Catalog.Select(e => e.category).Distinct();
 
-        /// <summary>Builds the ordered things: stacks split by stack limit, gear at normal quality, buildings minified.</summary>
-        public static List<Thing> MakeThings(ShopEntry entry, int count)
+        /// <summary>Builds the ordered things: stacks split by stack limit, gear at the chosen quality, buildings minified.</summary>
+        public static List<Thing> MakeThings(ShopEntry entry, int count, QualityCategory quality)
         {
             var things = new List<Thing>();
             if (entry.def.category == ThingCategory.Building)
@@ -74,7 +113,7 @@ namespace BankOfRimica
                 for (int i = 0; i < count; i++)
                 {
                     Thing b = ThingMaker.MakeThing(entry.def, entry.stuff);
-                    b.TryGetComp<CompQuality>()?.SetQuality(QualityCategory.Normal, ArtGenerationContext.Outsider);
+                    b.TryGetComp<CompQuality>()?.SetQuality(quality, ArtGenerationContext.Outsider);
                     things.Add(MinifyUtility.MakeMinified(b));
                 }
                 return things;
@@ -83,7 +122,7 @@ namespace BankOfRimica
             while (remaining > 0)
             {
                 Thing t = ThingMaker.MakeThing(entry.def, entry.stuff);
-                t.TryGetComp<CompQuality>()?.SetQuality(QualityCategory.Normal, ArtGenerationContext.Outsider);
+                t.TryGetComp<CompQuality>()?.SetQuality(quality, ArtGenerationContext.Outsider);
                 t.stackCount = Mathf.Min(remaining, entry.def.stackLimit);
                 remaining -= t.stackCount;
                 things.Add(t);
