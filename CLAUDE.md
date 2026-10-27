@@ -1,6 +1,6 @@
 # Bank of Rimica — working notes
 
-RimWorld 1.6 mod (requires Odyssey + Vanilla Quests Expanded - Deadlife; VFE Pirates optional).
+RimWorld 1.6 and 1.7 mod (1.7 loads the 1.6 assembly; requires Odyssey + Vanilla Quests Expanded - Deadlife; VFE Pirates optional).
 C# source in `Source/BankOfRimica`, XML in `Common/`, compiled DLL committed to `1.6/Assemblies/`.
 
 ## Build

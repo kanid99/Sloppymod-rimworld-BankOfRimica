@@ -1,6 +1,6 @@
 # Bank of Rimica — a space bank for RimWorld
 
-A RimWorld 1.6 mod that adds an orbital bank your colony can save with, borrow from, work for, and get hunted by.
+A RimWorld 1.6 and 1.7 mod that adds an orbital bank your colony can save with, borrow from, work for, and get hunted by.
 
 **Requires the Odyssey DLC and [Vanilla Quests Expanded - Deadlife](https://github.com/Vanilla-Expanded/VanillaQuestsExpanded-Deadlife)** (which itself needs Anomaly, Vanilla Expanded Framework and Harmony). No Harmony dependency. Safe to add to an existing save.
 Optional: [Vanilla Factions Expanded - Pirates](https://steamcommunity.com/sharedfiles/filedetails/?id=2723801948). If it's installed, bank heists can arrive on gauntlet ships.
